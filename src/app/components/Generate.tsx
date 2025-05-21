@@ -15,10 +15,10 @@ export default function Generate({ onGenerate }: Props) {
   });
 
   return (
-    <div className="bg-[#F7F9FC] p-6 rounded-xl shadow-lg w-full max-w-md">
+    <div className="bg-[#F7F9FC] p-6 rounded-xl shadow-lg w-full max-w-xl">
       {/* Subject Dropdown */}
-      <div className="mb-4 border ">
-        <label className="block text-sm font-medium text-cyan-500 mb-1 ">
+      <div className="mb-4 shadow-md border border-[#d1d9e7] p-2 rounded-lg ">
+        <label className="block text-lg font-medium text-cyan-500 mb-1 ">
           Choose Subject
         </label>
         <select
@@ -26,7 +26,7 @@ export default function Generate({ onGenerate }: Props) {
           onChange={(e) =>
             setForm({ ...form, subject: e.target.value as Subject })
           }
-          className="w-full px-4 py-2  border-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          className="w-full p-2 focus:outline-none text-xl "
         >
           <option>English</option>
           <option>Math</option>
@@ -35,14 +35,14 @@ export default function Generate({ onGenerate }: Props) {
       </div>
 
       {/* Level Dropdown */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-cyan-500 mb-1">
+      <div className="mb-4 shadow-md border border-[#d1d9e7] p-2 rounded-lg">
+        <label className="block text-lg font-medium text-cyan-500 mb-1">
           Choose Level
         </label>
         <select
           value={form.level}
           onChange={(e) => setForm({ ...form, level: e.target.value as Level })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          className="w-full p-2 focus:outline-none text-xl "
         >
           <option>Beginner</option>
           <option>Intermediate</option>
@@ -51,23 +51,22 @@ export default function Generate({ onGenerate }: Props) {
       </div>
 
       {/* Topic Input */}
-      <div className="mb-4">
-        <label className=" text-sm font-medium text-cyan-500 mb-1 flex items-center gap-1">
+      <div className="mb-4 shadow-md border border-[#d1d9e7] p-2 rounded-lg ">
+        <label className=" text-lg font-medium text-cyan-500 mb-1 flex items-center gap-1">
           Enter Topic
-          <span className="text-xs text-gray-400">(e.g., Photosynthesis)</span>
         </label>
         <textarea
           rows={2}
-          placeholder="Photosynthesis or Ancient Egypt"
+          placeholder="e.g., Photosynthesis or Ancient Egypt"
           value={form.topic}
           onChange={(e) => setForm({ ...form, topic: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          className="w-full h-28 resize-none focus:outline-none text-[#a1a8b4] text-lg p-1"
         />
       </div>
 
       {/* Button */}
       <button
-        className="w-full bg-cyan-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-cyan-600 transition"
+        className="w-full  bg-cyan-500 text-white font-medium py-4 px-4 rounded-lg hover:bg-cyan-600 transition"
         onClick={() => onGenerate(form)}
       >
         Generate Content →

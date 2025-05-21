@@ -1,8 +1,10 @@
 "use client";
 import React from "react";
 import { IoMdArrowDropright } from "react-icons/io";
+import { useRouter } from "next/navigation";
 
 const QuickGenerate = () => {
+  const router = useRouter();
   return (
     <div className="lg:bg-[#F7F9FC] bg-[#AB79FF1A] rounded-2xl p-6 mt-8 min-h-[195.75px] ">
       <h2 className="text-lg font-bold text-gray-800 mb-6">Quick Generate</h2>
@@ -38,7 +40,10 @@ const QuickGenerate = () => {
         />
 
         {/* Generate Button */}
-        <button className="px-8 py-3  bg-[#23BAD8] text-white font-semibold rounded-lg shadow hover:bg-cyan-600 transition whitespace-nowrap">
+        <button
+          onClick={() => router.push("/generate")}
+          className="px-8 py-3  bg-[#23BAD8] text-white font-semibold rounded-lg shadow hover:bg-cyan-600 transition whitespace-nowrap"
+        >
           Generate
         </button>
       </div>

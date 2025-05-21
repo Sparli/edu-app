@@ -25,7 +25,7 @@ const Sidebar = () => {
           <SidebarLink
             imageSrc="/images/ai.png"
             label="Generate Content"
-            href="/pages"
+            href="/generate"
           />
           <SidebarLink
             imageSrc="/images/sub.png"
