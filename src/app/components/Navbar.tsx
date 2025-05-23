@@ -113,9 +113,13 @@ const Navbar = () => {
               }}
             />
             <NavItem
-              src="/images/ai.png"
+              src="/images/gene.png"
               label="Generate Content"
               href="/generate"
+              onClick={() => {
+                router.push("/generate");
+                setMenuOpen(false);
+              }}
             />
             <NavItem
               src="/images/sub.png"
@@ -137,9 +141,25 @@ const Navbar = () => {
               }}
             />
 
-            <NavItem src="/images/set.png" label="Settings" href="/settings" />
+            <NavItem
+              src="/images/set.png"
+              label="Settings"
+              href="/settings"
+              onClick={() => {
+                router.push("/settings");
+                setMenuOpen(false);
+              }}
+            />
             <hr className="text-[#E2E2E2]" />
-            <NavItem src="/images/hel.png" label="Help Centre" href="help" />
+            <NavItem
+              src="/images/hel.png"
+              label="Help Centre"
+              href="/help"
+              onClick={() => {
+                router.push("/help");
+                setMenuOpen(false);
+              }}
+            />
             <ToggleItem
               src="/images/lang.png"
               label="English"
@@ -149,7 +169,15 @@ const Navbar = () => {
             />
           </nav>
           <div className="mt-48 space-x-8">
-            <NavItem src="/images/log.png" label="Logout" href="/auth" />
+            <NavItem
+              src="/images/log.png"
+              label="Logout"
+              href="/auth"
+              onClick={() => {
+                router.push("/auth");
+                setMenuOpen(false);
+              }}
+            />
           </div>
         </div>
       )}
@@ -172,6 +200,11 @@ const NavItem = ({
   const pathname = usePathname();
   const isActive = pathname === href;
 
+  // Automatically switch to white icon version if active
+  const iconSrc = isActive
+    ? src.replace(".png", "-wh.svg") // assumes white icons are named like dash-white.png
+    : src;
+
   return (
     <div
       onClick={onClick}
@@ -181,7 +214,7 @@ const NavItem = ({
           : "hover:bg-gray-100 text-gray-700"
       }`}
     >
-      <Image src={src} alt={label} width={20} height={20} />
+      <Image src={iconSrc} alt={label} width={20} height={20} />
       <span>{label}</span>
     </div>
   );

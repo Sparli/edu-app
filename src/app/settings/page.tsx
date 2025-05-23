@@ -2,7 +2,7 @@ import React from "react";
 
 import Navbar from "@/app/components/Navbar";
 import Sidebar from "@/app/components/Sidebar";
-import ComingSoon from "../components/coming-soon";
+import Settings from "../sections/Settings";
 
 export default function SubscriptionPage() {
   return (
@@ -10,7 +10,8 @@ export default function SubscriptionPage() {
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-        <ComingSoon />
+        <hr className="text-[#E5E7EB] mt-2" />
+        <Settings />
       </div>
     </div>
   );

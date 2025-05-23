@@ -37,7 +37,7 @@ const DashboardCards = () => {
           title="Generate New Content"
           description="Create AI-powered lessons and quizzes"
           buttonText="Smart Generating"
-          imageSrc="/images/gene.png"
+          imageSrc="/images/generate.png"
           onClick={() => router.push("/generate")}
         />
 
@@ -46,6 +46,7 @@ const DashboardCards = () => {
           description="View your previously generated lessons & quizzes"
           buttonText="Browse My Content"
           imageSrc="/images/cont.png"
+          onClick={() => router.push("/content")}
         />
 
         <DashboardCard

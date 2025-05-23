@@ -3,27 +3,53 @@
 import { useState } from "react";
 import type { GeneratedContent as IContent } from "@/app/types/content";
 import { ExternalLink } from "lucide-react";
+import LessonModal from "@/app/components/modals/LessonModal";
+import QuizModal from "@/app/components/modals/QuizModal";
+import type { Subject, Level } from "@/app/types/content";
 
 interface Props {
   content: IContent;
+  meta: {
+    topic: string;
+    subject: Subject;
+    level: Level;
+  };
 }
-
 const tabs = ["Lesson", "Quiz", "Reflection"];
 
-export default function GeneratedContent({ content }: Props) {
+export default function GeneratedContent({ content, meta }: Props) {
   const [activeTab, setActiveTab] = useState("Lesson");
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
   const [reflectionText, setReflectionText] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <div className="bg-[#F7F9FC] p-4 rounded-xl shadow-md w-full max-w-3xl animate-fade-in">
       {/* Tabs */}
-      <div className="flex gap-4 mb-4">
+      {/* Mobile-style tab switcher */}
+      <div className="flex justify-around border-b border-gray-200 mb-4 md:hidden">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={` rounded-xl border-2 font-medium h-28 w-[110px] transition-all ${
+            className={`pb-2 text-sm font-semibold transition ${
+              activeTab === tab
+                ? "bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent border-b-2 border-blue-500"
+                : "text-gray-400"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop tab boxes - hidden on small screens */}
+      <div className="hidden md:flex gap-4 mb-4">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`rounded-xl border-2 font-medium h-28 w-[110px] transition-all ${
               activeTab === tab
                 ? "bg-white border-cyan-400 text-black shadow-sm"
                 : "bg-white border-transparent text-gray-500"
@@ -89,7 +115,7 @@ export default function GeneratedContent({ content }: Props) {
               </h2>
               <p className="text-gray-700 mb-3">{content.reflection}</p>
               <textarea
-                className="w-full h-20 p-2 border border-gray-300 rounded-md resize-none text-sm"
+                className="w-full h-20 p-2 border border-gray-300 rounded-md outline-none resize-none text-sm"
                 placeholder="Write here answer..."
                 value={reflectionText}
                 onChange={(e) => setReflectionText(e.target.value)}
@@ -102,9 +128,14 @@ export default function GeneratedContent({ content }: Props) {
         <div>
           <hr className="my-3 text-[#E2E2E2]" />
           <div className="flex items-center justify-between">
-            <button className="text-gray-500 hover:text-gray-700 transition">
-              <ExternalLink size={18} />
-            </button>
+            {(activeTab === "Lesson" || activeTab === "Quiz") && (
+              <button
+                className="text-gray-500 hover:text-gray-700 transition"
+                onClick={() => setShowModal(true)}
+              >
+                <ExternalLink size={18} />
+              </button>
+            )}
 
             {/* Action Buttons by Tab */}
             {activeTab === "Lesson" && (
@@ -125,13 +156,29 @@ export default function GeneratedContent({ content }: Props) {
             )}
 
             {activeTab === "Reflection" && (
-              <button className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-cyan-600 transition">
-                Submit
-              </button>
+              <div className="w-full flex justify-end mt-4">
+                <button className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-cyan-600 transition">
+                  Submit
+                </button>
+              </div>
             )}
           </div>
         </div>
       </div>
+      {/* Conditional Modals */}
+      {showModal && activeTab === "Lesson" && (
+        <LessonModal
+          content={content}
+          topic={meta.topic}
+          subject={meta.subject}
+          level={meta.level}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showModal && activeTab === "Quiz" && (
+        <QuizModal content={content} onClose={() => setShowModal(false)} />
+      )}
     </div>
   );
 }

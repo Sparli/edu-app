@@ -12,3 +12,5 @@ export interface GeneratedContent {
   quiz: string;
   reflection: string;
 }
+
+

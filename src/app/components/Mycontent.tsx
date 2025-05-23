@@ -1,0 +1,114 @@
+import React from "react";
+import Image from "next/image";
+import { IoTrashOutline } from "react-icons/io5";
+import { BsSearch } from "react-icons/bs";
+
+const content = [
+  {
+    subject: "Math",
+    level: "Intermediate",
+    date: "Jan 15, 2024",
+    title: "Quadratic Equations",
+    icon: "/images/bok.svg",
+  },
+  {
+    subject: "Science",
+    level: "Beginner",
+    date: "Jan 15, 2024",
+    title: "Photosynthesis",
+    icon: "/images/sci.svg",
+  },
+  {
+    subject: "English",
+    level: "Advanced",
+    date: "Jan 15, 2024",
+    title: "Shakespeare's Sonnets",
+    icon: "/images/en.svg",
+  },
+  {
+    subject: "History",
+    level: "Intermediate",
+    date: "Jan 15, 2024",
+    title: "World War II Overview",
+    icon: "/images/his.svg",
+  },
+];
+
+export default function MyContentPage() {
+  return (
+    <div className="p-4 sm:p-6 md:p-8 w-full">
+      <h1 className="text-3xl font-bold mb-2">My Content</h1>
+      <p className="text-gray-600 mb-6 text-lg">
+        Here&lsquo;s everything you&apos;ve created with EduAI
+      </p>
+
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+        <div className="relative lg:w-1/2 w-full  ">
+          <input
+            type="text"
+            placeholder="Search your generated content..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-[#F6F6F6] focus:outline-none"
+          />
+          <BsSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
+        <div className="flex gap-3 flex-wrap">
+          <select className="border rounded-lg px-3 py-2 text-sm bg-[#F6F6F6]">
+            <option>Subject</option>
+          </select>
+          <select className="border rounded-lg px-3 py-2 text-sm bg-[#F6F6F6]">
+            <option>Level</option>
+          </select>
+          <select className="border rounded-lg px-3 py-2 text-sm bg-[#F6F6F6]">
+            <option>Newest</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 ">
+        {content.map((item, index) => (
+          <div
+            key={index}
+            className="relative rounded-2xl min-h-[250px] overflow-hidden shadow-md bg-[#DAE9FF]"
+          >
+            {/* Gradient Top Border */}
+            <div className="h-2 w-full bg-gradient-to-r from-[#0463EF] to-[#16EA9E] rounded-t-2xl"></div>
+
+            {/* Card Content */}
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center text-lg gap-2 font-semibold text-gray-800">
+                  <Image
+                    src={item.icon}
+                    alt={item.subject}
+                    width={20}
+                    height={20}
+                  />
+                  {item.subject}
+                </div>
+                <button className="text-red-500 bg-red-100 p-1 rounded-full hover:bg-red-200 transition">
+                  <IoTrashOutline size={18} />
+                </button>
+              </div>
+
+              <div className="mb-4 mt-4 inline-block rounded-full bg-[#C2D7F3] text-[#1D4ED8] text-lg px-3 py-1">
+                {item.level}
+              </div>
+
+              <p className="text-sm text-gray-500 mt-1 mb-1">{item.date}</p>
+              <h2 className="font-bold lg:text-2xl mb-8">{item.title}</h2>
+
+              <div className="flex gap-3">
+                <button className="bg-[#23BAD8] hover:bg-cyan-600 text-white px-4 py-[10px] w-1/3 rounded-xl text-lg">
+                  View
+                </button>
+                <button className="bg-white text-gray-700 px-4 py-[10px] rounded-xl w-1/3 text-lg">
+                  Edit Topic
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

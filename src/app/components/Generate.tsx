@@ -15,9 +15,9 @@ export default function Generate({ onGenerate }: Props) {
   });
 
   return (
-    <div className="bg-[#F7F9FC] p-6 rounded-xl shadow-lg w-full max-w-xl">
+    <div className="bg-[#AB79FF1A] lg:bg-[#F7F9FC] p-6 rounded-xl shadow-lg w-full max-w-xl">
       {/* Subject Dropdown */}
-      <div className="mb-4 shadow-md border border-[#d1d9e7] p-2 rounded-lg ">
+      <div className="mb-4 shadow-md border bg-white border-[#d1d9e7] p-2 rounded-lg ">
         <label className="block text-lg font-medium text-cyan-500 mb-1 ">
           Choose Subject
         </label>
@@ -35,7 +35,7 @@ export default function Generate({ onGenerate }: Props) {
       </div>
 
       {/* Level Dropdown */}
-      <div className="mb-4 shadow-md border border-[#d1d9e7] p-2 rounded-lg">
+      <div className="mb-4 shadow-md border bg-white border-[#d1d9e7] p-2 rounded-lg">
         <label className="block text-lg font-medium text-cyan-500 mb-1">
           Choose Level
         </label>
@@ -51,7 +51,7 @@ export default function Generate({ onGenerate }: Props) {
       </div>
 
       {/* Topic Input */}
-      <div className="mb-4 shadow-md border border-[#d1d9e7] p-2 rounded-lg ">
+      <div className="mb-4 shadow-md border bg-white border-[#d1d9e7] p-2 rounded-lg ">
         <label className=" text-lg font-medium text-cyan-500 mb-1 flex items-center gap-1">
           Enter Topic
         </label>
