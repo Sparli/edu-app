@@ -1,4 +1,6 @@
 "use client";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/app/translations";
 
 import {
   FiEdit,
@@ -30,6 +32,8 @@ export default function LessonModal({
   const [feedback, setFeedback] = useState<string>("");
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const { language } = useLanguage();
+  const t = translations[language];
 
   // ✅ Close on outside click
   useEffect(() => {
@@ -75,17 +79,18 @@ export default function LessonModal({
             <p className="text-gray-500 mt-2">
               {subject} - {level}
             </p>
-            <p className="text-gray-400 text-sm">Generated on April 30, 2025</p>
+            <p className="text-gray-400 text-sm">{t.modal_generated_on}</p>
           </div>
           <div className="flex gap-6 text-gray-600 mt-10 text-sm flex-wrap">
             <button className="flex items-center gap-1 hover:text-black">
-              <FiEdit /> Edit Topic
+              <FiEdit />
+              {t.modal_edit}
             </button>
             <button className="flex items-center gap-1 hover:text-black">
-              <FiTrash2 /> Delete
+              <FiTrash2 /> {t.modal_delete}
             </button>
             <button className="flex items-center gap-1 hover:text-black">
-              <FiDownload /> Download PDF
+              <FiDownload /> {t.modal_download}
             </button>
           </div>
         </div>
@@ -100,10 +105,10 @@ export default function LessonModal({
 
           <div className="flex  justify-start items-start gap-4 text-gray-600 text-sm pt-1 min-w-[80px]">
             <button className="flex items-center gap-1 hover:text-black">
-              <FiCopy size={16} /> Copy
+              <FiCopy size={16} /> {t.modal_copy}
             </button>
             <button className="flex items-center gap-1 hover:text-black">
-              <FiShare2 size={16} /> Share
+              <FiShare2 size={16} /> {t.modal_share}
             </button>
           </div>
         </div>
@@ -111,7 +116,7 @@ export default function LessonModal({
         {/* Feedback Section */}
         <div className="p-6 rounded-2xl w-full mt-12">
           <h4 className="font-semibold text-lg mb-4">
-            Was this content helpful?
+            {t.modal_feedback_title}
           </h4>
 
           <div className="flex justify-start mb-4">
@@ -131,7 +136,7 @@ export default function LessonModal({
           <textarea
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            placeholder="Share your feedback (optional)"
+            placeholder={t.modal_feedback_placeholder}
             className="w-full p-4 bg-[#F6F6F6] rounded-md text-gray-600 resize-none mb-6"
             rows={4}
           />
@@ -144,7 +149,7 @@ export default function LessonModal({
             }}
             className="bg-cyan-500 text-white px-7 py-2 rounded-lg hover:bg-cyan-600 transition float-right"
           >
-            Submit Feedback
+            {t.modal_feedback_submit}
           </button>
         </div>
       </div>

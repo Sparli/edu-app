@@ -1,34 +1,32 @@
 "use client";
-
 import { useState } from "react";
-
-const settingsData = [
-  {
-    title: "Update Notifications",
-    description:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
-  },
-  {
-    title: "Preview Effects",
-    description:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
-  },
-  {
-    title: "Milestone Notifications",
-    description:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
-  },
-  {
-    title: "Monthly Insights",
-    description:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
-  },
-];
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "../translations";
 
 export default function Settings() {
-  const [toggles, setToggles] = useState(
-    settingsData.map(() => true) // all toggles initially ON
-  );
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  const settingsData = [
+    {
+      title: t.setting_update,
+      description: t.desc_update,
+    },
+    {
+      title: t.setting_preview,
+      description: t.desc_preview,
+    },
+    {
+      title: t.setting_milestone,
+      description: t.desc_milestone,
+    },
+    {
+      title: t.setting_insights,
+      description: t.desc_insights,
+    },
+  ];
+
+  const [toggles, setToggles] = useState(settingsData.map(() => false));
 
   const toggleSetting = (index: number) => {
     const updated = [...toggles];
@@ -38,16 +36,14 @@ export default function Settings() {
 
   return (
     <div className="p-6 md:p-12 bg-white">
-      <h1 className="text-2xl md:text-4xl font-bold mb-2">Settings</h1>
-      <p className="text-gray-500 text-lg mb-10">
-        How can we help you? Choose the kind of help you need.
-      </p>
+      <h1 className="text-2xl md:text-4xl font-bold mb-2">{t.settingsTitle}</h1>
+      <p className="text-gray-500 text-lg mb-10">{t.settingsSubtitle}</p>
 
       <div className="space-y-8">
         {settingsData.map((setting, index) => (
           <div key={index} className="flex justify-between gap-4 pb-6">
             <div>
-              <h2 className="text-2xl  text-gray-800">{setting.title}</h2>
+              <h2 className="text-2xl text-gray-800">{setting.title}</h2>
               <p className="text-gray-500 mt-1 hidden lg:flex text-sm md:text-base">
                 {setting.description}
               </p>

@@ -3,6 +3,8 @@
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { GeneratedContent } from "@/app/types/content";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/app/translations";
 
 interface Props {
   content: GeneratedContent;
@@ -32,6 +34,8 @@ export default function QuizModal({ content, onClose }: Props) {
   }, [onClose]);
 
   const questions = content.quiz.split("\n").filter(Boolean); // Avoid empty lines
+  const { language } = useLanguage();
+  const t = translations[language];
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center px-4">
@@ -49,10 +53,10 @@ export default function QuizModal({ content, onClose }: Props) {
 
         {/* Header */}
         <div className="mt-10">
-          <h2 className="text-2xl font-bold mb-1">Quiz</h2>
+          <h2 className="text-2xl font-bold mb-1">{t.quiz_modal_title}</h2>
           <p className="text-sm text-gray-500">Science - Beginner</p>
           <p className="text-sm text-gray-400 mb-6">
-            Generated on April 30, 2025
+            {t.quiz_modal_generated_on}
           </p>
           <hr className="mb-10 text-[#E2E2E2]" />
         </div>
@@ -67,10 +71,10 @@ export default function QuizModal({ content, onClose }: Props) {
               <p className="mb-2 text-gray-700">{q}</p>
               <div className="flex gap-4 flex-wrap">
                 <button className="bg-cyan-500 text-white px-5 py-1.5 rounded-md hover:bg-cyan-600 transition">
-                  Yes
+                  {t.quiz_modal_button_yes}
                 </button>
                 <button className="bg-gray-300 text-gray-800 px-5 py-1.5 rounded-md hover:bg-gray-400 transition">
-                  No
+                  {t.quiz_modal_button_no}
                 </button>
               </div>
             </div>
@@ -80,7 +84,7 @@ export default function QuizModal({ content, onClose }: Props) {
         {/* Submit Button */}
         <div className="mt-12 text-right">
           <button className="bg-cyan-500 text-white px-6 py-2 rounded-md hover:bg-cyan-600 transition">
-            Submit
+            {t.quiz_modal_button_submit}
           </button>
         </div>
       </div>

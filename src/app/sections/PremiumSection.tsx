@@ -1,37 +1,42 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-
-const features = [
-  {
-    icon: "/images/content.svg",
-    title: "Advanced Content Generation",
-    description: "More detailed lessons & longer quizzes",
-    bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
-  },
-  {
-    icon: "/images/save.svg",
-    title: "Save Progress and Notes",
-    description: "Track what you've learned and keep notes",
-    bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
-  },
-  {
-    icon: "/images/access.svg",
-    title: "Priority Access",
-    description: "Faster results and early access to new tools",
-    bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
-  },
-];
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "../translations";
 
 const PremiumSection = () => {
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  const features = [
+    {
+      icon: "/images/content.svg",
+      title: t.feature_content_title,
+      description: t.feature_content_desc,
+      bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
+    },
+    {
+      icon: "/images/save.svg",
+      title: t.feature_save_title,
+      description: t.feature_save_desc,
+      bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
+    },
+    {
+      icon: "/images/access.svg",
+      title: t.feature_save_title,
+      description: t.feature_save_desc,
+      bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
+    },
+  ];
+
   return (
     <div className="w-full px-6 md:px-12 py-10">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-        <h1 className="text-2xl lg:text-[33px] font-bold text-gray-900">
-          Upgrade to EduAI Premium <span className="ml-1">🚀</span>
+      <div className="flex flex-col lg:flex-row justify-between mb-4">
+        <h1 className="text-xl lg:text-[33px] font-bold text-gray-900">
+          {t.premium_title}
         </h1>
 
-        <button className="mt-2 md:mt-0 flex items-center gap-2 px-4 py-2 bg-[#F0F8FB] text-[#3A3A3A] text-sm font-medium rounded-full">
+        <button className="mt-2 md:mt-0 flex  gap-2 lg:px-4 lg:py-2 w-[40%] lg:w-[10%]  bg-[#F0F8FB] text-[#3A3A3A] text-sm font-medium rounded-full">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-4 w-4 text-gray-600"
@@ -51,12 +56,12 @@ const PremiumSection = () => {
               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
             />
           </svg>
-          Sneak peek
+          {t.premium_sneak_peek}
         </button>
       </div>
 
       <p className="text-gray-600 mb-10 lg:text-[22px] text-base">
-        Unlock extra features and smarter learning tools — coming soon!
+        {t.premium_subtext}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:min-w-[600px] lg:min-h-[500px] mb-10">
@@ -84,8 +89,8 @@ const PremiumSection = () => {
       </div>
 
       <div className="flex justify-center">
-        <button className="bg-gradient-to-r from-[#FFCF55] to-[#F0B82C] text-gray-800 lg:text-2xl text-lg font-semibold lg:py-6 lg:px-20 py-4 px-20 rounded-lg shadow-lg hover:opacity-90 transition">
-          Upgrade to Premium
+        <button className="bg-gradient-to-r from-[#FFCF55] to-[#F0B82C] text-gray-800 lg:text-2xl text-lg font-semibold lg:py-6 lg:px-20 px-10 py-2 rounded-lg shadow-lg hover:opacity-90 transition">
+          {t.premium_upgrade_btn}
         </button>
       </div>
     </div>

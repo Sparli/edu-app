@@ -6,3 +6,16 @@ body {
 
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes fillBar {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-fill-bar {
+  animation: fillBar 5s linear forwards;
+}

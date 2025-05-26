@@ -1,16 +1,45 @@
 "use client";
-import React, { useState } from "react";
+
 import Image from "next/image";
 import { FaTimes } from "react-icons/fa";
 import ProfileModal from "./ProfileModal";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "../translations";
+import React, { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [languageToggle, setLanguageToggle] = useState(false);
+  const { language, setLanguage } = useLanguage();
+  const t = translations[language];
+  const [isHovered, setIsHovered] = useState(false);
 
   const [showProfileModal, setShowProfileModal] = useState(false); // NEW
   const router = useRouter();
+
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
 
   return (
     <>
@@ -18,22 +47,47 @@ const Navbar = () => {
       <header className="hidden lg:flex mt-1 w-full items-center justify-between px-6 py-4 bg-white ">
         {/* Logo */}
         <div className="flex items-center space-x-2">
-          <Image
-            src="/images/logo.svg"
-            alt="Logo"
-            width={300}
-            height={300}
-            className="mt-2"
-          />
+          <Link href="/dashboard">
+            <Image
+              src="/images/logo.svg"
+              alt="Logo"
+              width={300}
+              height={300}
+              className="mt-2 cursor-pointer"
+            />
+          </Link>
         </div>
 
         {/* Right Side */}
         <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <span className="text-gray-600">English</span>
+          <div
+            className="flex items-center space-x-2"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <Image
+              src="/images/lang.png"
+              alt="Language Icon"
+              width={20}
+              height={20}
+              className="cursor-pointer mr-4"
+            />
+
+            <span
+              className={`text-black mr-4 cursor-pointer hover:text-cyan-400`}
+            >
+              {isHovered
+                ? language === "en"
+                  ? "Français"
+                  : "English"
+                : language === "en"
+                ? "English"
+                : "Français"}
+            </span>
+
             <ToggleSwitch
-              enabled={languageToggle}
-              setEnabled={setLanguageToggle}
+              enabled={language === "en"}
+              setEnabled={(enabled) => setLanguage(enabled ? "en" : "fr")}
             />
           </div>
 
@@ -43,7 +97,7 @@ const Navbar = () => {
             onClick={() => setShowProfileModal(true)}
           >
             <Image
-              src="/images/image.png"
+              src="/images/avtar.jpg"
               alt="User Avatar"
               width={40}
               height={40}
@@ -51,7 +105,7 @@ const Navbar = () => {
             />
             <div className="text-center">
               <h4 className="text-gray-800 font-semibold">Alex Broad</h4>
-              <p className="text-gray-500 text-sm">Web Developer</p>
+              <p className="text-gray-500 text-sm">{t.role_student}</p>
             </div>
           </div>
         </div>
@@ -63,15 +117,17 @@ const Navbar = () => {
       />
 
       {/* Mobile Navbar */}
-      <header className="md:hidden w-[390px] mx-auto mt-2 flex items-center justify-between px-6 py-5 bg-[#DAE9FF] rounded-4xl">
+      <header className="md:hidden w-[350px] mx-auto mt-2 flex items-center justify-between px-6 py-5 bg-[#DAE9FF] rounded-4xl">
         <div className="flex items-center space-x-2">
-          <Image
-            src="/images/logo.svg"
-            alt="Logo"
-            width={150}
-            height={150}
-            className=""
-          />
+          <Link href="/dashboard">
+            <Image
+              src="/images/logo.svg"
+              alt="Logo"
+              width={150}
+              height={150}
+              className=""
+            />
+          </Link>
         </div>
         <button onClick={() => setMenuOpen(true)}>
           <Image
@@ -86,15 +142,21 @@ const Navbar = () => {
 
       {/* Sidebar Overlay */}
       {menuOpen && (
-        <div className="fixed top-0 left-0 w-2/3 h-full bg-white shadow-xl z-50 p-6 space-y-6">
+        <div
+          ref={sidebarRef}
+          className="fixed h-full top-0 left-0 w-2/3  bg-white shadow-xl z-50 p-4 space-y-6"
+        >
           <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-2 ">
-              <Image
-                src="/images/logo.svg"
-                alt="Logo"
-                width={150}
-                height={150}
-              />
+            <div className="flex items-center space-x-2">
+              <Link href="/dashboard">
+                <Image
+                  src="/images/logo.svg"
+                  alt="Logo"
+                  width={150}
+                  height={150}
+                  className=""
+                />
+              </Link>
             </div>
             <button onClick={() => setMenuOpen(false)}>
               <FaTimes className="text-2xl text-gray-600" />
@@ -102,10 +164,10 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Navigation */}
-          <nav className="space-y-6 text-gray-700 mt-16">
+          <nav className="space-y-4 text-gray-700 text-sm mt-14">
             <NavItem
               src="/images/dash.png"
-              label="Dashboard"
+              label={t.sidebar_dashboard}
               href="/dashboard"
               onClick={() => {
                 router.push("/dashboard"); // or your actual route
@@ -114,7 +176,7 @@ const Navbar = () => {
             />
             <NavItem
               src="/images/gene.png"
-              label="Generate Content"
+              label={t.sidebar_generate}
               href="/generate"
               onClick={() => {
                 router.push("/generate");
@@ -123,7 +185,7 @@ const Navbar = () => {
             />
             <NavItem
               src="/images/sub.png"
-              label="My Subscription"
+              label={t.sidebar_subscription}
               href="/subscription"
               onClick={() => {
                 router.push("/subscription");
@@ -133,7 +195,7 @@ const Navbar = () => {
 
             <NavItem
               src="/images/pro.png"
-              label="Profile"
+              label={t.sidebar_profile}
               href="/profile"
               onClick={() => {
                 setShowProfileModal(true);
@@ -143,7 +205,7 @@ const Navbar = () => {
 
             <NavItem
               src="/images/set.png"
-              label="Settings"
+              label={t.sidebar_settings}
               href="/settings"
               onClick={() => {
                 router.push("/settings");
@@ -153,25 +215,34 @@ const Navbar = () => {
             <hr className="text-[#E2E2E2]" />
             <NavItem
               src="/images/hel.png"
-              label="Help Centre"
+              label={t.sidebar_help}
               href="/help"
               onClick={() => {
                 router.push("/help");
                 setMenuOpen(false);
               }}
             />
-            <ToggleItem
-              src="/images/lang.png"
-              label="English"
-              enabled={languageToggle}
-              setEnabled={setLanguageToggle}
-              className="ml-3"
-            />
+            <div className="flex items-center space-x-2">
+              <Image
+                src="/images/lang.png"
+                alt="Language Icon"
+                width={20}
+                height={20}
+                className="cursor-pointer ml-3 mr-2"
+              />
+              <span className="text-black mr-16">
+                {language === "en" ? "English" : "Français"}
+              </span>
+              <ToggleSwitch
+                enabled={language === "en"}
+                setEnabled={(enabled) => setLanguage(enabled ? "en" : "fr")}
+              />
+            </div>
           </nav>
-          <div className="mt-48 space-x-8">
+          <div className="mt-25 space-x-8">
             <NavItem
               src="/images/log.png"
-              label="Logout"
+              label={t.sidebar_logout}
               href="/auth"
               onClick={() => {
                 router.push("/auth");
@@ -220,30 +291,6 @@ const NavItem = ({
   );
 };
 
-const ToggleItem = ({
-  src,
-  label,
-  enabled,
-  setEnabled,
-  className = "",
-}: {
-  src: string;
-
-  label: string;
-  enabled: boolean;
-  setEnabled: (value: boolean) => void;
-  className?: string;
-}) => (
-  <div className={`flex items-center justify-between ${className}`}>
-    <span className="flex items-center space-x-2">
-      <Image src={src} alt={label} width={20} height={20} />
-      <span>{label}</span>
-    </span>
-    <ToggleSwitch enabled={enabled} setEnabled={setEnabled} />
-  </div>
-);
-
-// Switch component
 const ToggleSwitch = ({
   enabled,
   setEnabled,

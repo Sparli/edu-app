@@ -3,16 +3,33 @@ import React, { useState } from "react";
 import Image from "next/image";
 import ProfileModal from "./ProfileModal";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/app/translations";
 
 const Sidebar = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const { language } = useLanguage();
+  const t = translations[language];
 
   return (
     <div className="w-64 bg-[#FAFAFA] p-6 lg:flex flex-col justify-between hidden border-r border-gray-200">
       {/* Top Section */}
       <div>
         <div className="flex items-center space-x-2 mb-10">
-          <Image src="/images/main.svg" alt="Logo" width={350} height={350} />
+          <Link href="/dashboard">
+            <Image
+              src={
+                language === "fr"
+                  ? "/images/french-logo.png"
+                  : "/images/main.svg"
+              }
+              alt="Logo"
+              width={350}
+              height={350}
+              className="cursor-pointer"
+            />
+          </Link>
         </div>
 
         {/* Navigation Links */}
@@ -20,24 +37,24 @@ const Sidebar = () => {
           <SidebarLink
             imageSrc="/images/dash.png"
             activeImageSrc="/images/dash-wh.svg"
-            label="Dashboard"
+            label={t.sidebar_dashboard}
             href="/dashboard"
           />
           <SidebarLink
-            imageSrc="/images/ai.png"
+            imageSrc="/images/gene.png"
             activeImageSrc="/images/gene-wh.svg"
-            label="Generate Content"
+            label={t.sidebar_generate}
             href="/generate"
           />
           <SidebarLink
             imageSrc="/images/sub.png"
             activeImageSrc="/images/sub-wh.svg"
-            label="My Subscription"
+            label={t.sidebar_subscription}
             href="/subscription"
           />
 
           <SidebarLink
-            label="Profile"
+            label={t.sidebar_profile}
             imageSrc="/images/pro.png"
             activeImageSrc="/images/pro-wh.svg"
             onClick={() => setShowProfileModal(true)}
@@ -45,14 +62,14 @@ const Sidebar = () => {
           <SidebarLink
             imageSrc="/images/set.png"
             activeImageSrc="/images/set-wh.svg"
-            label="Settings"
+            label={t.sidebar_settings}
             href="/settings"
           />
           <hr className="text-[#E2E2E2] mt-3 mb-4" />
           <SidebarLink
             imageSrc="/images/hel.png"
             activeImageSrc="/images/hel-wh.svg"
-            label="Help Centre"
+            label={t.sidebar_help}
             href="/help"
           />
         </nav>
@@ -60,7 +77,11 @@ const Sidebar = () => {
 
       {/* Bottom Section */}
       <div className="space-y-4">
-        <SidebarLink imageSrc="/images/log.svg" label="Logout" href="/auth" />
+        <SidebarLink
+          imageSrc="/images/log.svg"
+          label={t.sidebar_logout}
+          href="/auth"
+        />
       </div>
       <ProfileModal
         isOpen={showProfileModal}
