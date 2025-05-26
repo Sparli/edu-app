@@ -21,10 +21,10 @@ export default function QuickGenerate() {
   const quickGenerateRef = useRef<HTMLDivElement | null>(null);
 
   const [form, setForm] = useState<QuickGenerateFormData>({
-    subject: "Mathematics",
-    level: "Primary",
-    difficulty: "Beginner",
-    language: "English",
+    subject: "" as Subject,
+    level: "" as Level, // Start empty and match on select
+    difficulty: "" as Difficulty,
+    language: "" as Language,
     topic: "",
   });
 
@@ -49,9 +49,13 @@ export default function QuickGenerate() {
   // Handle clicks outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      const trigger = document.getElementById("subject-dropdown-trigger");
+
       if (
         subjectMenuRef.current &&
-        !subjectMenuRef.current.contains(e.target as Node)
+        !subjectMenuRef.current.contains(e.target as Node) &&
+        trigger &&
+        !trigger.contains(e.target as Node)
       ) {
         setIsSubjectMenuOpen(false);
       }
@@ -103,9 +107,9 @@ export default function QuickGenerate() {
   ];
 
   // Language, Level, and Difficulty options (flat lists)
-  const languageOptions = ["English", "French"];
-  const levelOptions = ["Primary", "Secondary"];
-  const difficultyOptions = ["Beginner", "Intermediate", "Advanced"];
+  const languageOptions = [t.select_language, "English", "French"];
+  const levelOptions = Object.values(t.levels);
+  const difficultyOptions = Object.values(t.difficulties);
 
   // Handle form submission
   const handleGenerate = () => {
@@ -125,60 +129,65 @@ export default function QuickGenerate() {
       <div className="flex flex-col lg:flex-row items-center justify-around content-center gap-10">
         {/* Custom Language Dropdown */}
         <CustomDropdown
-          label={t.quick_select_language}
           options={languageOptions}
-          selected={form.language}
-          onSelect={(val) => setForm({ ...form, language: val as Language })}
+          selected={form.language || t.select_language}
+          onSelect={(val) => {
+            if (val !== t.select_language)
+              setForm({ ...form, language: val as Language });
+          }}
           className="w-full"
         />
 
         {/* Custom Level Dropdown */}
         <CustomDropdown
-          label={t.quick_select_subject_level}
-          options={levelOptions.map((lvl) => t.levels[lvl as Level])}
-          selected={t.levels[form.level]}
+          options={levelOptions}
+          selected={t.levels[form.level] || t.select_level}
           onSelect={(val) => {
-            const match = Object.entries(t.levels).find(([, v]) => v === val);
-            if (match) setForm({ ...form, level: match[0] as Level });
+            if (val !== t.select_level) {
+              const match = Object.entries(t.levels).find(([, v]) => v === val);
+              if (match) setForm({ ...form, level: match[0] as Level });
+            }
           }}
           className="w-full"
         />
 
         {/* Custom Subject Dropdown */}
 
-        <div className="relative w-full shadow-md border bg-white border-[#d1d9e7] p-2 rounded-lg">
-          <label className="block text-lg font-medium text-cyan-500 mb-1">
-            {t.quick_select_subject}
-          </label>
+        <div className="relative w-full bg-white border-1 border-gray-300 p-1 rounded-lg">
           <div
+            id="subject-dropdown-trigger"
             onClick={() => {
-              setIsSubjectMenuOpen(!isSubjectMenuOpen);
+              setIsSubjectMenuOpen((prev) => !prev);
               scrollToQuickGenerate();
             }}
-            className="w-full p-2 text-xl bg-white rounded cursor-pointer flex items-center justify-between"
+            className="w-full p-3 text-xl bg-white rounded cursor-pointer flex items-center justify-between"
           >
-            <span>{t.subjects[form.subject as keyof typeof t.subjects]}</span>{" "}
+            <span className={`${!form.subject ? "text-black" : "text-black"}`}>
+              {form.subject
+                ? t.subjects[form.subject as keyof typeof t.subjects]
+                : t.select_subject}
+            </span>
+
             {/* ✅ Translated */}
             <svg
-              className="w-4 h-4 text-black"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
-              viewBox="0 0 28 28"
-              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 9l-7 7-7-7"
-              ></path>
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </div>
 
           {isSubjectMenuOpen && (
             <div
               ref={subjectMenuRef}
-              className="absolute top-full left-0 mt-1 w-full bg-white z-50 shadow-lg border border-gray-300 text-base rounded"
+              className="absolute lg:bottom-18 left-0 mt-1 w-full bg-white z-50 shadow-lg border border-gray-300 text-base rounded"
             >
               {subjectGroups.map((group, idx) => (
                 <div key={group.label}>
@@ -240,25 +249,22 @@ export default function QuickGenerate() {
 
         {/* Custom Difficulty Dropdown */}
         <CustomDropdown
-          label={t.quick_select_level}
-          options={difficultyOptions.map(
-            (diff) => t.difficulties[diff as Difficulty]
-          )}
-          selected={t.difficulties[form.difficulty]}
+          options={difficultyOptions}
+          selected={t.difficulties[form.difficulty] || t.select_difficulty}
           onSelect={(val) => {
-            const match = Object.entries(t.difficulties).find(
-              ([, v]) => v === val
-            );
-            if (match) setForm({ ...form, difficulty: match[0] as Difficulty });
+            if (val !== t.select_difficulty) {
+              const match = Object.entries(t.difficulties).find(
+                ([, v]) => v === val
+              );
+              if (match)
+                setForm({ ...form, difficulty: match[0] as Difficulty });
+            }
           }}
           className="w-full"
         />
 
         {/* Topic Input */}
-        <div className="relative w-full shadow-md border bg-white border-[#d1d9e7] p-2 rounded-lg">
-          <label className="block text-lg font-medium text-cyan-500 mb-1">
-            {t.quick_enter_topic}
-          </label>
+        <div className="relative w-full  bg-white  p-2 border-1 border-gray-300 rounded-lg">
           <input
             type="text"
             placeholder={t.quick_enter_topic}

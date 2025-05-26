@@ -9,33 +9,46 @@ const DashboardCards = () => {
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
+  const [activeCard, setActiveCard] = React.useState<number | null>(null);
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 mb-8">
         {/* Card 1 */}
         <DashboardCard
+          isActive={activeCard === 0}
           title={t.dashboard_generate_title}
           description={t.dashboard_generate_desc}
           buttonText={t.dashboard_generate_btn}
           imageSrc="/images/generate.svg"
-          onClick={() => router.push("/generate")}
+          onClick={() => {
+            setActiveCard(0);
+            router.push("/generate");
+          }}
         />
 
         <DashboardCard
+          isActive={activeCard === 1}
           title={t.dashboard_content_title}
           description={t.dashboard_content_desc}
           buttonText={t.dashboard_content_btn}
           imageSrc="/images/cont.svg"
-          onClick={() => router.push("/content")}
+          onClick={() => {
+            setActiveCard(1);
+            router.push("/content");
+          }}
         />
 
         <DashboardCard
+          isActive={activeCard === 2}
           title={t.dashboard_feedback_title}
           description={t.dashboard_feedback_desc}
           buttonText={t.dashboard_feedback_btn}
           imageSrc="/images/feed.svg"
-          onClick={() => router.push("/feedback")}
+          onClick={() => {
+            setActiveCard(2);
+            router.push("/feedback");
+          }}
         />
       </div>
     </>
@@ -48,14 +61,20 @@ const DashboardCard = ({
   buttonText,
   imageSrc,
   onClick,
+  isActive = false,
 }: {
   title: string;
   description: string;
   imageSrc: string;
   buttonText: string;
   onClick?: () => void;
+  isActive?: boolean;
 }) => (
-  <div className="lg:bg-[#f7f9fc] bg-[#AB79FF1A] hover:border-[#23BAD8] border-[#ffffff] hover:border rounded-2xl p-6 xl:min-w-[320.625px] xl:min-h-[381.375px] content-center  transition text-center">
+  <div
+    className={`${
+      isActive ? "bg-[#DAE9FF]" : "lg:bg-[#f7f9fc] bg-[#AB79FF1A]"
+    } hover:border-[#23BAD8] border-[#ffffff] hover:border rounded-2xl p-6 xl:min-w-[320.625px] xl:min-h-[381.375px] content-center transition text-center`}
+  >
     <div className="lg:w-30 lg:h-30 h-20 w-20 bg-[#23BAD8] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
       <Image
         src={imageSrc}

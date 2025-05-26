@@ -35,29 +35,6 @@ const PremiumSection = () => {
         <h1 className="text-xl lg:text-[33px] font-bold text-gray-900">
           {t.premium_title}
         </h1>
-
-        <button className="mt-2 md:mt-0 flex  gap-2 lg:px-4 lg:py-2 w-[40%] lg:w-[10%]  bg-[#F0F8FB] text-[#3A3A3A] text-sm font-medium rounded-full">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
-          {t.premium_sneak_peek}
-        </button>
       </div>
 
       <p className="text-gray-600 mb-10 lg:text-[22px] text-base">

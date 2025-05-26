@@ -13,7 +13,7 @@ const Sidebar = () => {
   const t = translations[language];
 
   return (
-    <div className="w-64 bg-[#FAFAFA] p-6 lg:flex flex-col justify-between hidden border-r border-gray-200">
+    <div className="w-80 bg-[#FAFAFA] p-6 lg:flex flex-col justify-between hidden border-r border-gray-200">
       {/* Top Section */}
       <div>
         <div className="flex items-center space-x-2 mb-10">
@@ -33,7 +33,7 @@ const Sidebar = () => {
         </div>
 
         {/* Navigation Links */}
-        <nav className="space-y-8">
+        <nav className="space-y-8 text-lg">
           <SidebarLink
             imageSrc="/images/dash.png"
             activeImageSrc="/images/dash-wh.svg"

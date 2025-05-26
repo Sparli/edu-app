@@ -152,7 +152,7 @@ export default function MyContentPage() {
             className="w-40"
           />
           <Dropdown
-            options={[t.filter_sort, "Newest", "Oldest"]}
+            options={[t.filter_sort, "New", "Oldest"]}
             selected={selectedSort}
             onSelect={setSelectedSort}
             className="w-40"

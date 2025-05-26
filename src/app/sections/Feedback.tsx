@@ -17,8 +17,8 @@ const Feedback = () => {
   };
 
   return (
-    <div className="flex-1 p-4 sm:p-8 bg-[#F7F9FC]  lg:max-w-[1529.375px] w-full mt-10">
-      <h1 className="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+    <div className="flex-1 p-4 sm:p-8  lg:max-w-[1529.375px] w-full mt-2">
+      <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center">
         {t.feedback_title}
         <Image
           src="/images/star.png"
@@ -28,23 +28,21 @@ const Feedback = () => {
           className="ml-1"
         />
       </h1>
-      <p className="text-gray-500 mb-6 text-sm sm:text-base">
-        {t.feedback_subtitle}
-      </p>
+      <p className="text-gray-500 mb-6 text-lg">{t.feedback_subtitle}</p>
 
-      <hr className="mb-6 border-gray-300" />
+      <hr className="my-16 border-gray-200" />
 
-      <div className="bg-[#F7F9FC] p-6 rounded-xl shadow-md space-y-12 lg:min-h-[600px] text-center">
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">
+      <div className="bg-[#F7F9FC] p-6 rounded-2xl space-y-10 lg:min-h-[600px] flex flex-col items-center">
+        <h2 className="text-xl font-semibold text-gray-800 mb-8">
           {t.feedback_question}
         </h2>
 
         {/* Star Ratings */}
-        <div className="flex justify-center space-x-2 mb-2">
+        <div className="flex justify-center space-x-3 mb-6">
           {[1, 2, 3, 4, 5].map((star) => (
             <FaStar
               key={star}
-              className={`cursor-pointer text-2xl transition ${
+              className={`cursor-pointer text-2xl mb-4 transition ${
                 (hoverRating || rating) >= star
                   ? "text-yellow-400"
                   : "text-gray-300"
@@ -57,7 +55,7 @@ const Feedback = () => {
         </div>
 
         {/* Rating Labels */}
-        <div className="flex justify-center space-x-6 text-gray-500 text-sm mb-4">
+        <div className="flex justify-center space-x-8 text-gray-500 text-lg mb-6">
           {t.feedback_labels.map((label: string, idx: number) => (
             <span
               key={label}
@@ -75,7 +73,7 @@ const Feedback = () => {
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          className="w-full p-4 rounded-lg bg-gray-100 focus:outline-none resize-none text-gray-700"
+          className="w-full max-w-xl h-[200px] mx-auto p-4 rounded-lg bg-[#FFFFFF] focus:outline-none resize-none text-gray-700"
           rows={4}
           placeholder={t.feedback_placeholder}
         />
@@ -83,7 +81,7 @@ const Feedback = () => {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          className="lg:w-1/3 p-3 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-500 to-green-400 hover:opacity-90 transition shadow-lg"
+          className="lg:w-1/3 p-4 mt-4 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-500 to-green-400 hover:opacity-90 transition shadow-lg"
         >
           {t.feedback_submit}
         </button>

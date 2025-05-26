@@ -22,7 +22,7 @@ export default function DashboardPage() {
           <p className="text-gray-500 lg:text-2xl text-base lg:mt-3 font-semibold">
             {t.dashboard_ready}
           </p>
-          <p className="text-gray-500 text-sm lg:mt-2">{t.dashboard_prompt}</p>
+          <p className="text-gray-500 text-lg lg:mt-2">{t.dashboard_prompt}</p>
         </div>
 
         <button

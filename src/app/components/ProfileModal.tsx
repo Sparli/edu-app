@@ -80,10 +80,10 @@ const ProfileModal = ({
               className="rounded-full"
             />
             <div className="flex gap-4">
-              <button className="px-6 py-1 rounded-lg border border-gray-500 text-sm">
+              <button className="px-6 py-1 rounded-2xl border border-gray-500 text-lg">
                 {t.profile_update}
               </button>
-              <button className="flex items-center gap-2 text-sm">
+              <button className="flex items-center gap-2 text-lg">
                 <FaTrashAlt /> {t.profile_remove}
               </button>
             </div>
@@ -99,7 +99,7 @@ const ProfileModal = ({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="lg:w-1/2 p-3 rounded-lg bg-[#F6F6F6] focus:outline-none"
+                className="lg:w-[70%] p-3 rounded-lg bg-[#F6F6F6] focus:outline-none"
               />
             </div>
             <div>
@@ -110,7 +110,7 @@ const ProfileModal = ({
                 type="email"
                 value={email}
                 readOnly
-                className="lg:w-1/2 p-3 rounded-lg bg-[#F6F6F6] focus:outline-none"
+                className="lg:w-[70%] p-3 rounded-lg bg-[#F6F6F6] focus:outline-none"
               />
             </div>
           </div>
@@ -119,13 +119,13 @@ const ProfileModal = ({
           <div className="mt-12 flex gap-4">
             <button
               onClick={handleSave}
-              className="bg-[#23BAD8] hover:bg-cyan-600 text-white lg:px-6 px-4 py-3 rounded-lg lg:w-1/4 font-semibold"
+              className="bg-[#23BAD8] hover:bg-cyan-600 text-white lg:px-6 px-4 py-3 rounded-lg lg:w-1/3 font-semibold"
             >
               {t.profile_save}
             </button>
             <button
               onClick={onClose}
-              className="bg-gray-100 text-gray-600 lg:px-6 px-4 py-3 rounded-lg lg:w-1/4"
+              className="bg-gray-100 text-gray-600 lg:px-6 px-4 py-3 rounded-lg lg:w-1/3"
             >
               {t.profile_cancel}
             </button>

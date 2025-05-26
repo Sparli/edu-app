@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "../translations";
-import CustomDropdown from "@/app/components/CustomDropdown"; // Adjust path if needed
+
+import LabalDropdown from "@/app/components/labal-dropdown";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 
 // Define types for form data
@@ -125,7 +126,7 @@ export default function Generate({ onGenerate }: Props) {
   return (
     <div className="bg-[#AB79FF1A] lg:bg-[#F7F9FC] p-6 rounded-xl shadow-lg w-full max-w-xl">
       {/* Custom Language Dropdown */}
-      <CustomDropdown
+      <LabalDropdown
         label={t.generate_language_label}
         options={languageOptions}
         selected={form.language}
@@ -134,7 +135,7 @@ export default function Generate({ onGenerate }: Props) {
       />
 
       {/* Custom Level Dropdown */}
-      <CustomDropdown
+      <LabalDropdown
         label={t.generate_level_label}
         options={levelOptions.map((lvl) => t.levels[lvl as Level])}
         selected={t.levels[form.level]}
@@ -146,7 +147,7 @@ export default function Generate({ onGenerate }: Props) {
       />
 
       {/* Custom Subject Dropdown */}
-      <div className="mb-2 relative w-full shadow-md  bg-white  p-2 rounded-lg">
+      <div className="mb-2 relative w-full border-1 border-[#d1d9e7] bg-white  p-2 rounded-lg">
         <label className="block text-lg font-medium text-cyan-500 mb-1">
           {t.quick_select_subject}
         </label>
@@ -236,7 +237,7 @@ export default function Generate({ onGenerate }: Props) {
         )}
       </div>
 
-      <CustomDropdown
+      <LabalDropdown
         label={t.generate_difficulty_label}
         options={difficultyOptions.map(
           (diff) => t.difficulties[diff as Difficulty]
@@ -252,7 +253,7 @@ export default function Generate({ onGenerate }: Props) {
       />
 
       {/* Topic Textarea (unchanged) */}
-      <div className="mb-2 shadow-md border bg-white border-[#d1d9e7] p-2 rounded-lg">
+      <div className="mb-2  border bg-white border-[#d1d9e7] p-2 rounded-lg">
         <label className="block text-lg font-medium text-cyan-500 mb-1">
           {t.generate_topic_label}
         </label>
