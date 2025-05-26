@@ -19,7 +19,8 @@ export type Difficulty = "Beginner" | "Intermediate" | "Advanced";
 
 export type Language = "English" | "French";
 
-export interface QuickGenerateFormData {
+export interface QuickGenerateFormData
+ {
   subject: Subject;
   level: Level;
   difficulty: Difficulty;

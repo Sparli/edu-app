@@ -7,14 +7,14 @@ import { translations } from "../translations";
 import GeneratedContent from "@/app/components/GeneratedContent";
 import { useState, useEffect, useRef } from "react";
 import type {
-  GenerateFormData,
+  QuickGenerateFormData,
   GeneratedContent as IContent,
 } from "../types/content";
 import Generate from "../components/Generate";
 
 export default function GenerateContentPage() {
   const [content, setContent] = useState<IContent | null>(null);
-  const [meta, setMeta] = useState<GenerateFormData | null>(null);
+  const [meta, setMeta] = useState<QuickGenerateFormData | null>(null);
   const { language } = useLanguage();
   const t = translations[language];
   const resultRef = useRef<HTMLDivElement | null>(null); // ✅ NEW
@@ -37,7 +37,7 @@ export default function GenerateContentPage() {
     }
   }, [language, meta]);
 
-  const handleGenerate = (form: GenerateFormData) => {
+  const handleGenerate = (form: QuickGenerateFormData) => {
     setMeta(form); // trigger regeneration
   };
 

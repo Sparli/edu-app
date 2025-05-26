@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
 import LanguageToggle from "./LanguageToggle";
-import CustomDropdown from "@/app/components/CustomDropdown";
+import Dropdown from "@/app/components/dropdown";
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -220,7 +220,7 @@ const AuthForm = () => {
                     <label className="mb-1 lg:text-lg text-md text-gray-700">
                       {t.auth_gender}
                     </label>
-                    <CustomDropdown
+                    <Dropdown
                       options={[
                         t.auth_select_gender,
                         t.auth_gender_male,
