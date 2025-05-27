@@ -32,12 +32,12 @@ const PremiumSection = () => {
   return (
     <div className="w-full px-6 md:px-12 py-10">
       <div className="flex flex-col lg:flex-row justify-between mb-4">
-        <h1 className="text-xl lg:text-[33px] font-bold text-gray-900">
+        <h1 className="text-xl lg:text-[33px] font-semibold text-[#000000]">
           {t.premium_title}
         </h1>
       </div>
 
-      <p className="text-gray-600 mb-10 lg:text-[22px] text-base">
+      <p className="text-[#4A4A4A] mb-10 lg:text-[22px] text-base">
         {t.premium_subtext}
       </p>
 
@@ -55,10 +55,10 @@ const PremiumSection = () => {
                 height={250}
               />
             </div>
-            <h3 className="font-bold text-gray-800  lg:text-2xl text-xl">
+            <h3 className="font-semibold text-[#1F2937]  lg:text-2xl text-xl">
               {feature.title}
             </h3>
-            <p className="text-gray-500 text-lg lg:text-xl  mt-2">
+            <p className="text-[#4B5563] text-lg lg:text-xl  mt-2">
               {feature.description}
             </p>
           </div>

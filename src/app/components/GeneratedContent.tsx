@@ -90,10 +90,10 @@ export default function GeneratedContent({ content, meta }: Props) {
         <div className="flex-1 overflow-y-auto pr-1">
           {activeTab === "lesson" && (
             <>
-              <h2 className="text-md font-semibold mb-2 text-gray-800">
+              <h2 className="text-lg font-medium mb-2 text-[#1F2937]">
                 {t.section_intro}
               </h2>
-              <p className="text-gray-600 whitespace-pre-line">
+              <p className="text-[#4B5563] font-normal text-lg whitespace-pre-line">
                 {content.lesson}
               </p>
             </>
@@ -101,11 +101,15 @@ export default function GeneratedContent({ content, meta }: Props) {
 
           {activeTab === "quiz" && (
             <>
-              <h2 className="text-md font-semibold mb-2 text-gray-800">
+              <h2 className="text-lg font-medium mb-2 text-[#1F2937]">
                 {t.section_quiz}
               </h2>
-              <p className="text-gray-600 mb-2">{t.quiz_progress}</p>
-              <p className="text-gray-700 mb-4">{content.quiz}</p>
+              <p className="text-[#4B5563] text-lg font-medium mb-2">
+                {t.quiz_progress}
+              </p>
+              <p className="text-[#4B5563] text-lg font-normal mb-4">
+                {content.quiz}
+              </p>
               <div className="flex gap-3 mb-2">
                 <button
                   className={`px-4 py-1 rounded font-medium ${
@@ -133,12 +137,18 @@ export default function GeneratedContent({ content, meta }: Props) {
 
           {activeTab === "reflection" && (
             <>
-              <h2 className="text-md font-semibold mb-2 text-gray-800">
+              <h2 className="text-lg font-medium mb-2 text-[#1F2937]">
                 {t.section_reflection}
               </h2>
-              <p className="text-gray-700 mb-3">{content.reflection}</p>
+
+              {/* Static instruction */}
+              <p className="text-[#4B5563] mr-6 font-normal text-lg mb-4">
+                {t.reflection_template}
+              </p>
+
+              {/* User input area */}
               <textarea
-                className="w-full h-20 p-2 border border-gray-300 rounded-md outline-none resize-none text-sm"
+                className="w-full h-30 p-2 border border-gray-300 bg-[#FFFFFF] rounded-xl outline-none resize-none text-[15px]"
                 placeholder={t.placeholder_reflection}
                 value={reflectionText}
                 onChange={(e) => setReflectionText(e.target.value)}

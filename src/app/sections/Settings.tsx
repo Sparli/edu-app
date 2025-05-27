@@ -36,8 +36,12 @@ export default function Settings() {
 
   return (
     <div className="p-6 md:p-12 bg-white">
-      <h1 className="text-2xl md:text-4xl font-bold mb-2">{t.settingsTitle}</h1>
-      <p className="text-gray-500 text-lg mb-10">{t.settingsSubtitle}</p>
+      <h1 className="text-[33px] md:text-4xl font-semibold mb-2">
+        {t.settingsTitle}
+      </h1>
+      <p className="text-[#4B5563] text-2xl font-normal mb-10">
+        {t.settingsSubtitle}
+      </p>
 
       <div className="space-y-8">
         {settingsData.map((setting, index) => (

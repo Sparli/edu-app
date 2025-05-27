@@ -31,14 +31,6 @@ export default function QuickGenerate() {
   // State for controlling dropdown visibility
   const [expandedGroupIdx, setExpandedGroupIdx] = useState<number | null>(null);
   const [isSubjectMenuOpen, setIsSubjectMenuOpen] = useState(false);
-  const scrollToQuickGenerate = () => {
-    setTimeout(() => {
-      quickGenerateRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 0); // delay to ensure dropdown toggle completes
-  };
 
   // Refs for each dropdown
   const subjectMenuRef = useRef<HTMLDivElement | null>(null);
@@ -114,7 +106,14 @@ export default function QuickGenerate() {
   // Handle form submission
   const handleGenerate = () => {
     // You can add logic here to handle form data if needed before routing
-    router.push("/generate");
+    const params = new URLSearchParams({
+      language: form.language,
+      level: form.level,
+      subject: form.subject,
+      difficulty: form.difficulty,
+      topic: form.topic,
+    });
+    router.push(`/generate?${params.toString()}`);
   };
 
   return (
@@ -122,7 +121,7 @@ export default function QuickGenerate() {
       ref={quickGenerateRef}
       className="bg-[#AB79FF1A] lg:bg-[#F7F9FC] rounded-2xl p-6 mt-8 min-h-[195.75px]"
     >
-      <h2 className="text-lg font-bold text-gray-800 mb-6">
+      <h2 className="text-[22.5px] font-semibold text-[#1F2937] mb-6">
         {t.quick_generate_title}
       </h2>
 
@@ -153,14 +152,13 @@ export default function QuickGenerate() {
 
         {/* Custom Subject Dropdown */}
 
-        <div className="relative w-full bg-white border-1 border-gray-300 p-1 rounded-lg">
+        <div className="relative w-full bg-white border-1 border-gray-300 p-[6px] rounded-lg">
           <div
             id="subject-dropdown-trigger"
             onClick={() => {
               setIsSubjectMenuOpen((prev) => !prev);
-              scrollToQuickGenerate();
             }}
-            className="w-full p-3 text-xl bg-white rounded cursor-pointer flex items-center justify-between"
+            className="w-full p-3 text-lg bg-white rounded cursor-pointer flex items-center justify-between"
           >
             <span className={`${!form.subject ? "text-black" : "text-black"}`}>
               {form.subject

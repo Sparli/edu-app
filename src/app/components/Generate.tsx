@@ -61,9 +61,13 @@ export default function Generate({ onGenerate }: Props) {
   // Handle clicks outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      const trigger = document.getElementById("subject-dropdown-trigger");
+
       if (
         subjectMenuRef.current &&
-        !subjectMenuRef.current.contains(e.target as Node)
+        !subjectMenuRef.current.contains(e.target as Node) &&
+        trigger &&
+        !trigger.contains(e.target as Node)
       ) {
         setIsSubjectMenuOpen(false);
       }
@@ -71,20 +75,16 @@ export default function Generate({ onGenerate }: Props) {
       if (
         levelMenuRef.current &&
         !levelMenuRef.current.contains(e.target as Node)
-      ) {
-      }
-
-      if (
-        difficultyMenuRef.current &&
-        !difficultyMenuRef.current.contains(e.target as Node)
-      ) {
-      }
-
-      if (
-        languageMenuRef.current &&
-        !languageMenuRef.current.contains(e.target as Node)
-      ) {
-      }
+      )
+        if (
+          difficultyMenuRef.current &&
+          !difficultyMenuRef.current.contains(e.target as Node)
+        )
+          if (
+            languageMenuRef.current &&
+            !languageMenuRef.current.contains(e.target as Node)
+          ) {
+          }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -152,10 +152,11 @@ export default function Generate({ onGenerate }: Props) {
           {t.quick_select_subject}
         </label>
         <div
+          id="subject-dropdown-trigger"
           onClick={() => {
-            setIsSubjectMenuOpen(!isSubjectMenuOpen);
+            setIsSubjectMenuOpen((prev) => !prev);
           }}
-          className="w-full p-2 text-lg bg-white rounded cursor-pointer flex items-center justify-between"
+          className="w-full p-3 text-lg bg-white rounded cursor-pointer flex items-center justify-between"
         >
           <span>{t.subjects[form.subject as keyof typeof t.subjects]}</span>{" "}
           {/* ✅ translated subject */}

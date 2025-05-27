@@ -89,8 +89,7 @@ Les plantes utilisent la lumière du soleil pour produire leur propre nourriture
 Le dioxyde de carbone est un sous-produit de la photosynthèse.
 La chlorophylle est un pigment vert essentiel.`,
 
-  reflection_template: (topic: string) =>
-    `🪞 Réfléchis à ${topic} :\nComment ce sujet se relie-t-il à ton expérience d'apprentissage personnelle ?`,
+  reflection_template: "Comment ce sujet se relie-t-il à ton expérience d'apprentissage personnelle ?",
   generate_page_title: "Générer un nouveau contenu pédagogique",
   generate_page_subtitle: "Créez des leçons, des quiz et des questions de réflexion engageants en quelques minutes.",
   generate_page_desc: "Utilisez l'IA pour générer des leçons, des quiz et des idées d'apprentissage.",
@@ -130,6 +129,10 @@ La chlorophylle est un pigment vert essentiel.`,
       my_content_title: "Mon Contenu",
     my_content_subtitle: "Voici tout ce que vous avez créé avec EdulmMersion",
     search_placeholder: "Rechercher dans votre contenu généré...",
+    // For French
+filter_by: "Filtrer par",
+sort_by: "Trier par",
+
     filter_subject: "Sujet",
     filter_level: "Niveau",
     filter_sort: "Le plus récent",
@@ -346,8 +349,7 @@ Plants use sunlight to make their own food.
 Carbon dioxide is a waste product of photosynthesis.
 Chlorophyll is the green pigment that helps plants absorb light.`,
 
-  reflection_template: (topic: string) =>
-    `🪞 Reflect on ${topic}:\nHow does this relate to your personal learning experience?`,
+  reflection_template: "How does this relate to your personal learning experience?",
     generate_page_title: "Generate New Learning Content",
   generate_page_subtitle: "Create engaging lessons, quizzes, and reflection questions in minutes.",
   generate_page_desc: "Use AI to generate lessons, quizzes, and learning ideas.",
@@ -387,6 +389,10 @@ Chlorophyll is the green pigment that helps plants absorb light.`,
       my_content_title: "My Content",
     my_content_subtitle: "Here's everything you've created with EdulmMersion",
     search_placeholder: "Search your generated content...",
+    // For English
+filter_by: "Filter by",
+sort_by: "Sort by",
+
     filter_subject: "Subject",
     filter_level: "Level",
     filter_sort: "Newest",

@@ -84,13 +84,13 @@ const DashboardCard = ({
         className="lg:w-15 lg:h-15 w-10 h-10"
       />
     </div>
-    <h3 className="text-xl lg:text-2xl font-bold text-gray-800 mb-2">
+    <h3 className="text-xl lg:text-2xl font-semibold text-[##1F2937] mb-2">
       {title}
     </h3>
-    <p className="text-gray-500 text-lg lg:text-xl mb-6">{description}</p>
+    <p className="text-[#4B5563] text-lg mb-6  mx-12">{description}</p>
     <button
       onClick={onClick || undefined}
-      className="lg:px-6 lg:py-3 px-4 py-2 bg-[#23BAD8] text-white rounded-lg hover:bg-cyan-600 transition"
+      className="lg:px-18 lg:py-4 px-4 py-2 bg-[#23BAD8] text-white rounded-lg hover:bg-cyan-600 transition"
     >
       {buttonText}
     </button>

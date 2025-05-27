@@ -67,8 +67,12 @@ const ProfileModal = ({
         </button>
 
         <div className="lg:ml-8">
-          <h2 className="text-2xl font-bold mb-2">{t.profile_title}</h2>
-          <p className="text-gray-500 mb-6">{t.profile_subtext}</p>
+          <h2 className="text-[27px] text-[Text] font-semibold mb-2">
+            {t.profile_title}
+          </h2>
+          <p className="text-[#666666] lg:text-lg font-normal mb-6">
+            {t.profile_subtext}
+          </p>
 
           {/* Profile Image */}
           <div className="flex flex-col lg:flex-row  lg:items-center mt-11 mb-11 gap-6">
