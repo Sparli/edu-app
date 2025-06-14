@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "./context/LanguageContext";
+import AuthGate from "./components/AuthGate";
+import { ProfileProvider } from "./context/ProfileContext"; // ✅ Import ProfileProvider
+import "katex/dist/katex.min.css";
 
-// Load fonts
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -20,7 +22,6 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
 });
 
-// Metadata
 export const metadata: Metadata = {
   title: "EdulmMersion",
   description: "A platform for immersive learning",
@@ -31,7 +32,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Root layout
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,11 +39,17 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="fr"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable}`}
     >
       <body className="antialiased font-poppins">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <ProfileProvider>
+            {" "}
+            {/* ✅ Added ProfileProvider wrapper */}
+            <AuthGate>{children}</AuthGate>
+          </ProfileProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

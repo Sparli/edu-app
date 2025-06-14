@@ -6,29 +6,38 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
+import { useProfile } from "@/app/context/ProfileContext";
 
 const Sidebar = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const { language } = useLanguage();
   const t = translations[language];
+  const { profile } = useProfile();
+
+  const usagePercent = Math.min(
+    ((profile?.daily_quota_used ?? 0) / (profile?.daily_quota_limit ?? 1)) *
+      100,
+    100
+  );
 
   return (
-    <div className="w-80 bg-[#FAFAFA] p-6 lg:flex flex-col justify-between hidden border-r border-gray-200">
+    <div className="w-80 bg-[#FAFAFA] p-6 lg:flex hidden flex-col justify-between border-r border-gray-200">
       {/* Top Section */}
       <div>
         <div className="flex items-center space-x-2 mb-10">
           <Link href="/dashboard">
-            <Image
-              src={
-                language === "fr"
-                  ? "/images/french-logo.png"
-                  : "/images/main.svg"
-              }
-              alt="Logo"
-              width={350}
-              height={350}
-              className="cursor-pointer"
-            />
+            <div className="relative w-[200px] h-[60px]">
+              <Image
+                src={
+                  language === "fr"
+                    ? "/images/french-logo.png"
+                    : "/images/main.svg"
+                }
+                alt="Logo"
+                fill
+                className="object-contain cursor-pointer"
+              />
+            </div>
           </Link>
         </div>
 
@@ -77,10 +86,33 @@ const Sidebar = () => {
 
       {/* Bottom Section */}
       <div className="space-y-4">
+        {profile?.daily_quota_limit != null && (
+          <div className="pt-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-1">
+              {t.sidebar_daily_quota}
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+              <div
+                className="bg-[#23BAD8] h-2 rounded-full"
+                style={{ width: `${usagePercent}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              {profile?.daily_quota_used ?? 0} /{" "}
+              {profile?.daily_quota_limit ?? 0}
+            </p>
+          </div>
+        )}
         <SidebarLink
           imageSrc="/images/log.svg"
           label={t.sidebar_logout}
-          href="/auth"
+          onClick={() => {
+            localStorage.removeItem("access");
+            localStorage.removeItem("refresh");
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            window.location.href = "/auth";
+          }}
         />
       </div>
       <ProfileModal

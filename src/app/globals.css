@@ -19,3 +19,33 @@ body {
 .animate-fill-bar {
   animation: fillBar 5s linear forwards;
 }
+
+
+/* Tailwind-compatible range thumb styling */
+input[type="range"].thumb-blue::-webkit-slider-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background-color: #23BAD8; /* Tailwind's blue-600 */
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+}
+
+input[type="range"].thumb-blue::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  background-color: #23BAD8;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+}
+
+input[type="range"].thumb-blue::-ms-thumb {
+  height: 16px;
+  width: 16px;
+  background-color: #23BAD8;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+}

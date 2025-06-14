@@ -1,18 +1,41 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import Image from "next/image";
 import { FaEnvelope } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
+import authApi from "../utils/authApi";
 
 const OtpVerification = () => {
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
+  const [resendCooldown, setResendCooldown] = useState(30); // seconds
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resendError, setResendError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+
+  useEffect(() => {
+    if (resendCooldown === 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("pendingEmail");
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+  }, []);
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -65,14 +88,52 @@ const OtpVerification = () => {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const fullOtp = otp.join("");
-    if (fullOtp === "1234") {
-      setSuccess(true);
-      setError(false);
-    } else {
+    setVerifying(true);
+    setError(false);
+
+    try {
+      const res = await authApi.post("/users/verify-otp/", {
+        email,
+        otp: fullOtp,
+      });
+
+      if (res.data.success) {
+        localStorage.setItem("access", res.data.access);
+        localStorage.setItem("refresh", res.data.refresh);
+        setSuccess(true);
+        router.push("/dashboard");
+      } else {
+        setError(true);
+      }
+    } catch {
       setError(true);
-      setSuccess(false);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email || resending || resendCooldown > 0) return;
+
+    setResending(true);
+    setResendMessage(null);
+    setResendError(null);
+
+    try {
+      const res = await authApi.post("/users/resend-otp/", { email });
+
+      if (res.data.success) {
+        setResendMessage(res.data.message || "OTP resent.");
+        setResendCooldown(30);
+      } else {
+        setResendError(res.data.error || "Something went wrong.");
+      }
+    } catch {
+      setResendError("Server error. Please try again.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -112,7 +173,7 @@ const OtpVerification = () => {
                 <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#23BAD8]" />
                 <input
                   type="email"
-                  value="alex@gmail.com"
+                  value={email}
                   readOnly
                   className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                 />
@@ -136,7 +197,9 @@ const OtpVerification = () => {
                     <input
                       key={idx}
                       id={`otp-${idx}`}
-                      type="text"
+                      type="tel" // ✅ Change to "tel" for numeric keyboard
+                      inputMode="numeric" // ✅ Helps further hint the browser
+                      pattern="[0-9]*" // ✅ For validation + mobile keyboard
                       value={digit}
                       maxLength={1}
                       className={`w-14 h-14 text-center rounded-lg text-xl font-semibold ${
@@ -156,6 +219,33 @@ const OtpVerification = () => {
                 )}
               </>
             )}
+            <div className="text-center mt-2">
+              {resendCooldown > 0 ? (
+                <p className="text-gray-500 text-sm">
+                  You can resend OTP in{" "}
+                  <span className="font-semibold">{resendCooldown}</span>s
+                </p>
+              ) : (
+                <button
+                  onClick={handleResendOtp}
+                  disabled={resending}
+                  className="text-[#23BAD8] font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resending ? "Sending..." : t.otp_resend_button}
+                </button>
+              )}
+            </div>
+            {resendMessage && (
+              <p className="text-green-600 text-sm text-center mt-1">
+                {resendMessage}
+              </p>
+            )}
+
+            {resendError && (
+              <p className="text-red-500 text-sm text-center mt-1">
+                {resendError}
+              </p>
+            )}
 
             {/* Success message */}
             {success && (
@@ -174,17 +264,42 @@ const OtpVerification = () => {
 
             <button
               onClick={() => {
-                if (success) {
-                  router.push("/dashboard");
-                } else if (otp.some((digit) => digit === "")) {
+                if (otp.some((digit) => digit === "")) {
                   setError(true);
                 } else {
                   handleVerify();
                 }
               }}
-              className="w-full p-3 bg-[#23BAD8] text-white rounded-lg hover:bg-cyan-600 transition"
+              disabled={verifying}
+              className={`w-full p-3 rounded-lg transition flex justify-center items-center ${
+                verifying
+                  ? "bg-[#23BAD8]/70 cursor-not-allowed"
+                  : "bg-[#23BAD8] hover:bg-cyan-600"
+              } text-white`}
             >
-              {t.otpa_continue}
+              {verifying ? (
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              ) : null}
+              {verifying ? "Verifying..." : t.otpa_continue}
             </button>
 
             <p className="text-center text-gray-600">

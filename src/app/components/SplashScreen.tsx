@@ -3,7 +3,11 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const SplashScreen = ({ targetRoute = "/auth" }: { targetRoute?: string }) => {
+const SplashScreen = ({
+  targetRoute = "/dashboard",
+}: {
+  targetRoute?: string;
+}) => {
   const router = useRouter();
 
   useEffect(() => {

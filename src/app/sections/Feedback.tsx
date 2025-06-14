@@ -4,6 +4,7 @@ import { FaStar } from "react-icons/fa";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "../translations";
+import authApi from "@/app/utils/authApi";
 
 const Feedback = () => {
   const [rating, setRating] = useState<number>(0);
@@ -11,9 +12,56 @@ const Feedback = () => {
   const [feedback, setFeedback] = useState<string>("");
   const { language } = useLanguage();
   const t = translations[language];
+  const [submitStatus, setSubmitStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
-  const handleSubmit = () => {
-    alert(`Rating: ${rating} Stars\nFeedback: ${feedback}`);
+  const handleSubmit = async () => {
+    if (!rating) {
+      setSubmitStatus("error");
+      alert("Please select a rating before submitting.");
+      return;
+    }
+
+    setSubmitStatus("loading");
+
+    const payload = {
+      stars: rating,
+      rating_label: getRatingLabel(rating),
+      comment: feedback.trim(),
+      user_datetime: new Date().toISOString(),
+    };
+
+    try {
+      const res = await authApi.post("/feedback/submit/", payload);
+      if (res.data?.success) {
+        setSubmitStatus("success");
+        setFeedback("");
+        setRating(0);
+      } else {
+        setSubmitStatus("error");
+      }
+    } catch (err) {
+      console.error("Feedback error:", err);
+      setSubmitStatus("error");
+    }
+  };
+
+  const getRatingLabel = (stars: number): string => {
+    switch (stars) {
+      case 1:
+        return "poor";
+      case 2:
+        return "average";
+      case 3:
+        return "good";
+      case 4:
+        return "very_good";
+      case 5:
+        return "excellent";
+      default:
+        return "average"; // fallback
+    }
   };
 
   return (
@@ -55,7 +103,7 @@ const Feedback = () => {
         </div>
 
         {/* Rating Labels */}
-        <div className="flex justify-center space-x-8 text-gray-500 text-lg mb-6">
+        <div className="flex justify-center lg:space-x-8 space-x-3 text-gray-500 text-lg mb-6">
           {t.feedback_labels.map((label: string, idx: number) => (
             <span
               key={label}
@@ -70,21 +118,43 @@ const Feedback = () => {
         </div>
 
         {/* Feedback Text Area */}
-        <textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          className="w-full max-w-xl h-[200px] mx-auto p-4 rounded-lg bg-[#FFFFFF] focus:outline-none resize-none text-gray-700"
-          rows={4}
-          placeholder={t.feedback_placeholder}
-        />
+        <div className="relative w-full max-w-xl mx-auto">
+          <textarea
+            value={feedback}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val.length <= 500) setFeedback(val);
+            }}
+            maxLength={500}
+            className="w-full h-[200px] p-4 pr-16 rounded-lg bg-white focus:outline-none resize-none text-gray-700"
+            rows={4}
+            placeholder={t.feedback_placeholder}
+          />
+          <p className="absolute bottom-2 right-4 text-sm text-gray-400">
+            {feedback.length}/500
+          </p>
+        </div>
 
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          className="lg:w-1/3 p-4 mt-4 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-500 to-green-400 hover:opacity-90 transition shadow-lg"
+          disabled={submitStatus === "loading"}
+          className="lg:w-1/3 p-4 mt-4 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-500 to-green-400 hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {t.feedback_submit}
+          {submitStatus === "loading" ? "Submitting..." : t.feedback_submit}
         </button>
+
+        {submitStatus === "success" && (
+          <p className="text-green-600 text-sm mt-2">
+            Feedback submitted. Thank you!
+          </p>
+        )}
+
+        {submitStatus === "error" && (
+          <p className="text-red-500 text-sm mt-2">
+            Submission failed. Please try again.
+          </p>
+        )}
       </div>
     </div>
   );

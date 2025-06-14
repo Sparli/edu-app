@@ -1,18 +1,34 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaEnvelope } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
+import { useSearchParams } from "next/navigation";
+import authApi from "@/app/utils/authApi";
 
 const OtpVerification = () => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success] = useState(false);
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [resendError, setResendError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (resendCooldown === 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
@@ -65,16 +81,56 @@ const OtpVerification = () => {
     }
   };
 
-  const handleVerify = () => {
-    const fullOtp = otp.join("");
-    if (fullOtp === "1234") {
-      setSuccess(true);
-      setError(false);
-    } else {
-      setError(true);
-      setSuccess(false);
+  const handleResendOtp = async () => {
+    if (!email || resending || resendCooldown > 0) return;
+
+    setResending(true);
+    setResendMessage(null);
+    setResendError(null);
+
+    try {
+      const res = await authApi.post("/users/forgot-password/request-otp/", {
+        email,
+      });
+
+      if (res.data.success) {
+        setResendMessage(res.data.message || "OTP resent.");
+        setResendCooldown(30);
+        setOtp(["", "", "", ""]); // clear current OTP
+      } else {
+        setResendError(res.data.error || "Something went wrong.");
+      }
+    } catch {
+      setResendError("Server error. Please try again.");
+    } finally {
+      setResending(false);
     }
   };
+
+  const handleVerify = async () => {
+    const fullOtp = otp.join("");
+
+    try {
+      const res = await authApi.post("/users/forgot-password/verify-otp/", {
+        email,
+        otp: fullOtp,
+      });
+
+      const data = res.data;
+
+      if (data.success && data.reset_token) {
+        router.push(
+          `/forgot-password?email=${encodeURIComponent(email)}&token=${
+            data.reset_token
+          }`
+        );
+      } else {
+        setError(true);
+      }
+    } catch {
+      setError(true);
+    }
+    };
 
   return (
     <>
@@ -111,8 +167,10 @@ const OtpVerification = () => {
               <div className="relative">
                 <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#23BAD8]" />
                 <input
-                  type="email"
-                  value="alex@gmail.com"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={email}
                   readOnly
                   className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                 />
@@ -136,7 +194,9 @@ const OtpVerification = () => {
                     <input
                       key={idx}
                       id={`otp-${idx}`}
-                      type="text"
+                      type="tel" // 👈 Triggers numeric keyboard
+                      inputMode="numeric" // 👈 Suggests numeric mode for soft keyboards
+                      pattern="[0-9]*" // 👈 Helps with validation and some Android keyboards
                       value={digit}
                       maxLength={1}
                       className={`w-14 h-14 text-center rounded-lg text-xl font-semibold ${
@@ -171,12 +231,38 @@ const OtpVerification = () => {
                 <p className="text-gray-500 text-lg">{t.otp_success_message}</p>
               </div>
             )}
+            <div className="text-center mt-2">
+              {resendCooldown > 0 ? (
+                <p className="text-gray-500 text-sm">
+                  You can resend OTP in{" "}
+                  <span className="font-semibold">{resendCooldown}</span>s
+                </p>
+              ) : (
+                <button
+                  onClick={handleResendOtp}
+                  disabled={resending}
+                  className="text-[#23BAD8] font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resending
+                    ? "Sending..."
+                    : t.otp_resend_button || "Resend OTP"}
+                </button>
+              )}
+            </div>
+            {resendMessage && (
+              <p className="text-green-600 text-sm text-center mt-1">
+                {resendMessage}
+              </p>
+            )}
+            {resendError && (
+              <p className="text-red-500 text-sm text-center mt-1">
+                {resendError}
+              </p>
+            )}
 
             <button
               onClick={() => {
-                if (success) {
-                  router.push("/forgot-password");
-                } else if (otp.some((digit) => digit === "")) {
+                if (otp.some((digit) => digit === "")) {
                   setError(true);
                 } else {
                   handleVerify();

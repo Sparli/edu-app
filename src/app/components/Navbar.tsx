@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "../translations";
+import { useProfile } from "@/app/context/ProfileContext";
 import React, { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
@@ -14,6 +15,7 @@ const Navbar = () => {
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
   const [isHovered, setIsHovered] = useState(false);
+  const { profile } = useProfile();
 
   const [showProfileModal, setShowProfileModal] = useState(false); // NEW
   const router = useRouter();
@@ -96,15 +98,36 @@ const Navbar = () => {
             className="flex items-center space-x-2 cursor-pointer mr-4"
             onClick={() => setShowProfileModal(true)}
           >
-            <Image
-              src="/images/avtar.jpg"
-              alt="User Avatar"
-              width={40}
-              height={40}
-              className="rounded-full"
-            />
+            <div className="relative w-[60px] h-[60px]">
+              <Image
+                src={
+                  profile?.profile_image
+                    ? profile.profile_image.replace("http://", "https://")
+                    : "/images/avtar.jpg"
+                }
+                alt="User Avatar"
+                fill
+                className="rounded-full object-cover"
+              />
+              {profile?.is_subscribed && (
+                <div className="absolute bottom-0 right-0 bg-yellow-400 rounded-full p-1 shadow-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 text-white"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
             <div className="text-center">
-              <h4 className="text-gray-800 font-semibold">Alex Broad</h4>
+              <h4 className="text-gray-800 font-semibold">
+                {(profile?.first_name || "") + " " + (profile?.last_name || "")}
+              </h4>
+
               <p className="text-gray-500 text-sm">{t.role_student}</p>
             </div>
           </div>
@@ -239,14 +262,43 @@ const Navbar = () => {
               />
             </div>
           </nav>
+          {profile?.daily_quota_limit != null && (
+            <div className="mt-8 border-t pt-4 border-gray-200">
+              <p className="text-sm text-gray-600 mb-3">
+                {language === "fr" ? "Quota quotidien" : "Daily Quota"}
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                <div
+                  className="bg-[#23BAD8] h-2 rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      ((profile?.daily_quota_used ?? 0) /
+                        (profile?.daily_quota_limit ?? 1)) *
+                        100,
+                      100
+                    )}%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 ml-2">
+                {profile?.daily_quota_used ?? 0} /{" "}
+                {profile?.daily_quota_limit ?? 0}
+              </p>
+            </div>
+          )}
+
           <div className="mt-25 space-x-8">
             <NavItem
               src="/images/log.png"
               label={t.sidebar_logout}
               href="/auth"
               onClick={() => {
-                router.push("/auth");
+                localStorage.removeItem("access");
+                localStorage.removeItem("refresh");
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("refresh_token");
                 setMenuOpen(false);
+                window.location.href = "/auth"; // hard redirect
               }}
             />
           </div>

@@ -4,10 +4,10 @@
 import { useEffect, useRef, useState } from "react";
 
 interface CustomDropdownProps {
-  options: string[];
+  options: { label: string; value: string }[]; // support label/value pairs
   selected: string;
   onSelect: (value: string) => void;
-
+  placeholder?: string;
   className?: string;
 }
 
@@ -15,7 +15,7 @@ export default function Dropdown({
   options,
   selected,
   onSelect,
-
+  placeholder,
   className = "",
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,14 +33,19 @@ export default function Dropdown({
 
   return (
     <div
-      className={`relative p-2 shadow-md rounded-lg bg-[#F6F6F6] ${className}`}
+      className={`relative p-2  rounded-lg bg-[#F6F6F6] ${className}`}
       ref={menuRef}
     >
       <div
         onClick={() => setIsOpen(!isOpen)}
         className=" text-lg rounded-lg cursor-pointer flex justify-between items-center"
       >
-        <span>{selected}</span>
+        <span className={`${!selected ? "text-black" : ""}`}>
+          {options.find((opt) => opt.value === selected)?.label ||
+            placeholder ||
+            "Select..."}
+        </span>
+
         <svg
           className="w-4 h-4"
           fill="none"
@@ -56,19 +61,19 @@ export default function Dropdown({
         </svg>
       </div>
       {isOpen && (
-        <div className="absolute w-full mt-1 left-0 bg-white border border-gray-300 rounded shadow z-50">
+        <div className="absolute w-full mt-1 left-0 bg-white border border-gray-300 rounded z-50">
           {options.map((opt) => (
             <div
-              key={opt}
+              key={opt.value}
               onClick={() => {
-                onSelect(opt);
+                onSelect(opt.value);
                 setIsOpen(false);
               }}
               className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                selected === opt ? "text-cyan-600 font-semibold" : ""
+                selected === opt.value ? "text-cyan-600 font-semibold" : ""
               }`}
             >
-              {opt}
+              {opt.label}
             </div>
           ))}
         </div>

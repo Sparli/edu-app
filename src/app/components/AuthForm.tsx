@@ -1,5 +1,8 @@
 "use client";
 import React, { useState } from "react";
+import axios from "axios";
+import authApi from "../utils/authApi";
+
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa";
@@ -19,9 +22,138 @@ const AuthForm = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const [selectedGender, setSelectedGender] = useState("");
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleAction = () => {
-    setShowSplash(true); // This splash will navigate to /dashboard
+  // Validation Errors
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [apiError, setApiError] = useState("");
+
+  // Common
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Signup-only
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [age, setAge] = useState("");
+  const genderOptions = [
+    { label: t.auth_select_gender, value: "" },
+    { label: t.auth_gender_male, value: "Male" },
+    { label: t.auth_gender_female, value: "Female" },
+    { label: t.auth_gender_other, value: "Other" },
+  ];
+
+  // API call
+  const validateSignupFields = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!firstName.trim()) newErrors.firstName = t.validation_first_name;
+    if (!lastName.trim()) newErrors.lastName = t.validation_last_name;
+    if (!email.trim()) newErrors.email = t.validation_email;
+    if (!username.trim()) {
+      newErrors.username = t.validation_username;
+    } else if (/\s/.test(username)) {
+      newErrors.username = t.validation_username_spaces;
+    }
+    if (!age.trim()) newErrors.age = t.validation_age;
+    if (!selectedGender) newErrors.gender = t.validation_gender;
+    if (!password.trim()) {
+      newErrors.password = t.validation_password;
+    } else {
+      const regex = /^(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!regex.test(password)) {
+        newErrors.password = t.validation_password_simple;
+      }
+    }
+
+    if (!confirmPassword.trim())
+      newErrors.confirmPassword = t.validation_confirm_password;
+    if (password && confirmPassword && password !== confirmPassword)
+      newErrors.confirmPassword = t.validation_password_mismatch;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignup = async () => {
+    if (!validateSignupFields()) return;
+
+    setIsSigningUp(true);
+    const payload = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      username,
+      password,
+      confirm_password: confirmPassword,
+      age: parseInt(age),
+      gender: selectedGender,
+      language: language,
+    };
+
+    try {
+      const res = await authApi.post("/users/register/", payload);
+      if (res.data.success) {
+        localStorage.setItem("pendingEmail", email);
+        router.push("/otp");
+      } else {
+        setApiError(res.data.error || t.auth_signup_failed);
+      }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data?.seconds_until_expiry) {
+        alert(
+          `Please wait ${err.response.data.seconds_until_expiry} seconds before retrying.`
+        );
+      } else {
+        setApiError(t.auth_signup_failed);
+      }
+    } finally {
+      setIsSigningUp(false);
+    }
+  };
+
+  // handle validation
+
+  const validateLoginFields = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!email.trim()) newErrors.email = t.validation_email;
+    if (!password.trim()) newErrors.password = t.validation_password;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle login
+  const handleLogin = async () => {
+    if (!validateLoginFields()) return;
+
+    setIsLoggingIn(true);
+
+    try {
+      const res = await authApi.post("/users/login/", { email, password });
+
+      if (res.data.success) {
+        localStorage.setItem("access", res.data.access);
+        localStorage.setItem("refresh", res.data.refresh);
+        setShowSplash(true);
+      } else {
+        setApiError(res.data.error);
+        // Backend provides specific messages
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.error) {
+        setApiError(err.response.data.error);
+        // Show backend-provided error
+      } else {
+        setApiError(t.auth_login_failed);
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   if (showSplash) return <SplashScreen targetRoute="/dashboard" />;
@@ -100,8 +232,13 @@ const AuthForm = () => {
                     <input
                       type="email"
                       placeholder={t.auth_email_placeholder}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                     />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">{errors.email}</p>
+                    )}
                   </div>
                 </div>
 
@@ -115,8 +252,14 @@ const AuthForm = () => {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder={t.auth_password_placeholder}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                     />
+                    {errors.password && (
+                      <p className="text-red-500 text-sm">{errors.password}</p>
+                    )}
+
                     <span
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
                       onClick={() => setShowPassword(!showPassword)}
@@ -133,12 +276,45 @@ const AuthForm = () => {
                     {t.auth_forgot_password}
                   </Link>
                 </div>
+                {apiError && (
+                  <p className="text-red-500 text-sm text-center mt-4">
+                    {apiError}
+                  </p>
+                )}
                 <button
-                  onClick={handleAction}
-                  className="w-full p-3 bg-[#23BAD8] text-white rounded-lg mt-8 mb-10 hover:bg-cyan-600 transition"
+                  onClick={handleLogin}
+                  disabled={isLoggingIn}
+                  className={`w-full p-3 mt-8 mb-10 rounded-lg transition flex justify-center items-center ${
+                    isLoggingIn
+                      ? "bg-[#23BAD8]/70 cursor-not-allowed"
+                      : "bg-[#23BAD8] hover:bg-cyan-600"
+                  } text-white`}
                 >
-                  {t.auth_login_button}
+                  {isLoggingIn ? (
+                    <svg
+                      className="animate-spin h-5 w-5 mr-2 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  ) : null}
+                  {isLoggingIn ? "Logging in..." : t.auth_login_button}
                 </button>
+
                 <p className="text-center text-gray-600">
                   {t.auth_no_account}{" "}
                   <span
@@ -161,8 +337,15 @@ const AuthForm = () => {
                       <input
                         type="text"
                         placeholder="Alex"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         className="p-3 rounded-lg bg-[#F6F6F6] w-full focus:outline-none"
                       />
+                      {errors.firstName && (
+                        <p className="text-red-500 text-sm">
+                          {errors.firstName}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col">
                       <label className="mb-1 lg:text-lg text-md text-gray-700">
@@ -171,8 +354,15 @@ const AuthForm = () => {
                       <input
                         type="text"
                         placeholder="Smith"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                         className="p-3 rounded-lg bg-[#F6F6F6] w-full focus:outline-none"
                       />
+                      {errors.lastName && (
+                        <p className="text-red-500 text-sm">
+                          {errors.lastName}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -186,8 +376,13 @@ const AuthForm = () => {
                       <input
                         type="email"
                         placeholder="alex@gmail.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                       />
+                      {errors.email && (
+                        <p className="text-red-500 text-sm">{errors.emai}</p>
+                      )}
                     </div>
                   </div>
 
@@ -200,8 +395,15 @@ const AuthForm = () => {
                       <input
                         type="text"
                         placeholder="@alexsmith"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         className="p-3 rounded-lg bg-[#F6F6F6] w-full focus:outline-none"
                       />
+                      {errors.username && (
+                        <p className="text-red-500 text-sm">
+                          {errors.username}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col">
                       <label className="mb-1 lg:text-lg text-md text-gray-700">
@@ -210,8 +412,13 @@ const AuthForm = () => {
                       <input
                         type="number"
                         placeholder="25"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
                         className="p-3 rounded-lg bg-[#F6F6F6] w-full focus:outline-none"
                       />
+                      {errors.age && (
+                        <p className="text-red-500 text-sm">{errors.age}</p>
+                      )}
                     </div>
                   </div>
 
@@ -221,14 +428,10 @@ const AuthForm = () => {
                       {t.auth_gender}
                     </label>
                     <Dropdown
-                      options={[
-                        t.auth_select_gender,
-                        t.auth_gender_male,
-                        t.auth_gender_female,
-                        t.auth_gender_other,
-                      ]}
-                      selected={selectedGender || t.auth_select_gender}
+                      options={genderOptions}
+                      selected={selectedGender}
                       onSelect={setSelectedGender}
+                      placeholder={t.auth_select_gender}
                       className="w-full"
                     />
                   </div>
@@ -242,8 +445,16 @@ const AuthForm = () => {
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="********"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="w-full p-3 rounded-lg bg-[#F6F6F6] focus:outline-none"
                       />
+                      {errors.password && (
+                        <p className="text-red-500 text-sm">
+                          {errors.password}
+                        </p>
+                      )}
+
                       <span
                         className="absolute right-3 top-[48px] text-gray-500 cursor-pointer"
                         onClick={() => setShowPassword(!showPassword)}
@@ -258,17 +469,51 @@ const AuthForm = () => {
                       <input
                         type="password"
                         placeholder="********"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         className="w-full p-3 rounded-lg bg-[#F6F6F6] focus:outline-none"
                       />
+                      {errors.confirmPassword && (
+                        <p className="text-red-500 text-sm">
+                          {errors.confirmPassword}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   {/* Button */}
                   <button
-                    onClick={() => router.push("/otp")}
-                    className="w-full p-3 bg-[#23BAD8] text-white rounded-lg hover:bg-cyan-600 transition"
+                    onClick={handleSignup}
+                    disabled={isSigningUp}
+                    className={`w-full p-3 rounded-lg transition flex justify-center cursor-pointer items-center ${
+                      isSigningUp
+                        ? "bg-[#23BAD8]/70 cursor-not-allowed"
+                        : "bg-[#23BAD8] hover:bg-cyan-600"
+                    } text-white`}
                   >
-                    {t.auth_signup_button}
+                    {isSigningUp ? (
+                      <svg
+                        className="animate-spin h-5 w-5 mr-2 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                    ) : null}
+                    {isSigningUp ? "Processing..." : t.auth_signup_button}
                   </button>
 
                   {/* Switch to Login */}

@@ -6,27 +6,60 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "../translations";
 import CustomDropdown from "@/app/components/CustomDropdown";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
-import {
+import PremiumLockModal from "@/app/components/PremiumLockModal";
+import { FaCrown } from "react-icons/fa";
+import { useProfile } from "@/app/context/ProfileContext";
+
+import type {
+  GenerateRequest,
   Language,
   Level,
   Difficulty,
   Subject,
-  QuickGenerateFormData,
-} from "../types/content"; // Adjust path if needed
+} from "@/app/types/content";
 
 export default function QuickGenerate() {
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
   const quickGenerateRef = useRef<HTMLDivElement | null>(null);
+  const [previousDifficulty, setPreviousDifficulty] =
+    useState<Difficulty>("Beginner");
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const { profile } = useProfile();
 
-  const [form, setForm] = useState<QuickGenerateFormData>({
+  const [form, setForm] = useState<GenerateRequest>({
     subject: "" as Subject,
-    level: "" as Level, // Start empty and match on select
+    level: "" as Level,
     difficulty: "" as Difficulty,
     language: "" as Language,
     topic: "",
+    user_datetime: new Date().toISOString(), // ✅ Required field
   });
+
+  // local errors for each field
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof GenerateRequest, string>>
+  >({});
+
+  /** field-by-field validator */
+  const validateForm = (): boolean => {
+    const newErr: Partial<Record<keyof GenerateRequest, string>> = {};
+
+    if (!form.language) newErr.language = t.validation_language_required;
+    if (!form.level) newErr.level = t.validation_level_required;
+    if (!form.subject) newErr.subject = t.validation_subject_required;
+    if (!form.difficulty) newErr.difficulty = t.validation_difficulty_required;
+    if (!form.topic.trim()) newErr.topic = t.validation_topic_required;
+
+    setErrors(newErr);
+    return Object.keys(newErr).length === 0;
+  };
+
+  /** disable Generate button until every field is filled */
+  const isFormComplete = Object.values(form).every((v) =>
+    typeof v === "string" ? v.trim().length > 0 : !!v
+  );
 
   // State for controlling dropdown visibility
   const [expandedGroupIdx, setExpandedGroupIdx] = useState<number | null>(null);
@@ -37,6 +70,7 @@ export default function QuickGenerate() {
   const levelMenuRef = useRef<HTMLDivElement | null>(null);
   const difficultyMenuRef = useRef<HTMLDivElement | null>(null);
   const languageMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Handle clicks outside to close dropdowns
   useEffect(() => {
@@ -98,22 +132,20 @@ export default function QuickGenerate() {
     },
   ];
 
-  // Language, Level, and Difficulty options (flat lists)
-  const languageOptions = [t.select_language, "English", "French"];
-  const levelOptions = Object.values(t.levels);
-  const difficultyOptions = Object.values(t.difficulties);
-
   // Handle form submission
   const handleGenerate = () => {
-    // You can add logic here to handle form data if needed before routing
-    const params = new URLSearchParams({
+    if (!validateForm()) return;
+    setIsLoading(true); // keep this for showing spinner on button
+    const queryParams = new URLSearchParams({
       language: form.language,
       level: form.level,
       subject: form.subject,
       difficulty: form.difficulty,
       topic: form.topic,
+      trigger: "1", // ✅ this is mandatory
     });
-    router.push(`/generate?${params.toString()}`);
+
+    router.push(`/generate?${queryParams.toString()}`);
   };
 
   return (
@@ -127,46 +159,66 @@ export default function QuickGenerate() {
 
       <div className="flex flex-col lg:flex-row items-center justify-around content-center gap-10">
         {/* Custom Language Dropdown */}
+        {/* 🌐 Language Dropdown */}
         <CustomDropdown
-          options={languageOptions}
-          selected={form.language || t.select_language}
+          label={t.generate_language_label}
+          options={[
+            { label: "English", value: "English" },
+            { label: "Français", value: "French" },
+          ]}
+          selected={
+            form.language ? form.language : t.select_language // 🪄 fallback label: "Sélectionner la langue"
+          }
           onSelect={(val) => {
-            if (val !== t.select_language)
-              setForm({ ...form, language: val as Language });
+            setForm({ ...form, language: val as Language });
+            setErrors((e) => ({ ...e, language: undefined }));
           }}
-          className="w-full"
+          className="w-full mb-6"
+          error={errors.language}
         />
 
-        {/* Custom Level Dropdown */}
+        {/* 🎓 Level Dropdown */}
         <CustomDropdown
-          options={levelOptions}
-          selected={t.levels[form.level] || t.select_level}
+          label={t.generate_level_label}
+          options={[
+            { label: t.levels.Primary, value: "Primary" },
+            { label: t.levels.Secondary, value: "Secondary" },
+          ]}
+          selected={
+            form.level
+              ? t.levels[form.level] // 🪄 this renders "Primaire"/"Primary"
+              : t.select_level // 🪄 fallback label: "Sélectionner le niveau"
+          }
           onSelect={(val) => {
-            if (val !== t.select_level) {
-              const match = Object.entries(t.levels).find(([, v]) => v === val);
-              if (match) setForm({ ...form, level: match[0] as Level });
-            }
+            setForm({ ...form, level: val as Level });
+            setErrors((e) => ({ ...e, level: undefined }));
           }}
-          className="w-full"
+          className="w-full mb-6"
+          error={errors.level}
         />
 
-        {/* Custom Subject Dropdown */}
-
-        <div className="relative w-full bg-white border-1 border-gray-300 p-[6px] rounded-lg">
+        {/* ────────── Custom Subject Dropdown (validated) ────────── */}
+        <div
+          className={`mb-6 relative w-full p-[6px] rounded-lg bg-white
+    ${
+      errors.subject
+        ? "border-red-400 ring-1 ring-red-400"
+        : "border-1 border-gray-300"
+    }
+  `}
+        >
+          {/* Trigger */}
           <div
             id="subject-dropdown-trigger"
-            onClick={() => {
-              setIsSubjectMenuOpen((prev) => !prev);
-            }}
+            onClick={() => setIsSubjectMenuOpen((prev) => !prev)}
             className="w-full p-3 text-lg bg-white rounded cursor-pointer flex items-center justify-between"
           >
-            <span className={`${!form.subject ? "text-black" : "text-black"}`}>
+            <span>
               {form.subject
                 ? t.subjects[form.subject as keyof typeof t.subjects]
                 : t.select_subject}
             </span>
 
-            {/* ✅ Translated */}
             <svg
               className="w-4 h-4"
               fill="none"
@@ -182,6 +234,7 @@ export default function QuickGenerate() {
             </svg>
           </div>
 
+          {/* Dropdown menu */}
           {isSubjectMenuOpen && (
             <div
               ref={subjectMenuRef}
@@ -189,6 +242,7 @@ export default function QuickGenerate() {
             >
               {subjectGroups.map((group, idx) => (
                 <div key={group.label}>
+                  {/* Group header */}
                   <div
                     className="flex justify-between items-center px-4 py-2 cursor-pointer hover:bg-gray-100"
                     onClick={() =>
@@ -206,8 +260,7 @@ export default function QuickGenerate() {
                         t.subjectGroups[
                           group.label as keyof typeof t.subjectGroups
                         ]
-                      }{" "}
-                      {/* ✅ Translated */}
+                      }
                     </span>
                     {expandedGroupIdx === idx ? (
                       <FiChevronUp />
@@ -216,6 +269,7 @@ export default function QuickGenerate() {
                     )}
                   </div>
 
+                  {/* Group subjects */}
                   {expandedGroupIdx === idx && (
                     <div className="pl-6 pr-4 pb-2">
                       {group.subjects.map((subj) => (
@@ -228,12 +282,15 @@ export default function QuickGenerate() {
                           }`}
                           onClick={() => {
                             setForm({ ...form, subject: subj as Subject });
+
+                            /* 🔄 clear validation error */
+                            setErrors((e) => ({ ...e, subject: undefined }));
+
                             setIsSubjectMenuOpen(false);
                             setExpandedGroupIdx(null);
                           }}
                         >
-                          • {t.subjects[subj as keyof typeof t.subjects]}{" "}
-                          {/* ✅ Translated */}
+                          • {t.subjects[subj as keyof typeof t.subjects]}
                         </div>
                       ))}
                     </div>
@@ -243,43 +300,108 @@ export default function QuickGenerate() {
               ))}
             </div>
           )}
+
+          {/* Inline error text */}
+          {errors.subject && (
+            <p className="text-red-500 text-sm mt-1 ml-1">{errors.subject}</p>
+          )}
         </div>
 
         {/* Custom Difficulty Dropdown */}
         <CustomDropdown
-          options={difficultyOptions}
-          selected={t.difficulties[form.difficulty] || t.select_difficulty}
+          options={[
+            { label: t.difficulties.Beginner, value: "Beginner" },
+            { label: t.difficulties.Intermediate, value: "Intermediate" },
+            {
+              value: "Advanced",
+              label: (
+                <div className="flex justify-between items-center w-full pr-2">
+                  <span>{t.difficulties.Advanced}</span>
+                  {!profile?.is_subscribed && (
+                    <FaCrown className="text-yellow-500 text-xl" />
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          selected={
+            form.difficulty
+              ? t.difficulties[form.difficulty]
+              : t.select_difficulty
+          }
           onSelect={(val) => {
-            if (val !== t.select_difficulty) {
-              const match = Object.entries(t.difficulties).find(
-                ([, v]) => v === val
-              );
-              if (match)
-                setForm({ ...form, difficulty: match[0] as Difficulty });
+            const selectedKey = val as Difficulty;
+
+            if (selectedKey === "Advanced" && !profile?.is_subscribed) {
+              setPreviousDifficulty(form.difficulty);
+              setShowPremiumModal(true);
+              return;
             }
+
+            setForm((prevForm) => ({
+              ...prevForm,
+              difficulty: selectedKey,
+            }));
+
+            setErrors((e) => ({ ...e, difficulty: undefined }));
           }}
-          className="w-full"
+          className="w-full mb-6"
+          error={errors.difficulty}
         />
 
         {/* Topic Input */}
-        <div className="relative w-full  bg-white  p-2 border-1 border-gray-300 rounded-lg">
-          <input
-            type="text"
-            placeholder={t.quick_enter_topic}
-            value={form.topic}
-            onChange={(e) => setForm({ ...form, topic: e.target.value })}
-            className="w-full p-2 text-xl bg-white rounded focus:outline-none text-[#a1a8b4]"
-          />
+        <div className="flex flex-col w-full">
+          <div className="bg-white p-2 border border-gray-300 rounded-lg">
+            <input
+              type="text"
+              placeholder={t.quick_enter_topic}
+              value={form.topic}
+              onChange={(e) => {
+                if (e.target.value.length <= 150) {
+                  setForm({ ...form, topic: e.target.value });
+                }
+              }}
+              className="w-full p-2 text-xl bg-white rounded focus:outline-none text-[#1F2937]"
+            />
+          </div>
+          <p className="text-right text-sm text-gray-500 mt-1">
+            {form.topic.length}/150
+          </p>
         </div>
 
         {/* Generate Button */}
         <button
           onClick={handleGenerate}
-          className="w-full lg:w-auto px-8 py-4 bg-cyan-500 text-white font-medium rounded-lg hover:bg-cyan-600 transition whitespace-nowrap"
+          disabled={!isFormComplete || isLoading}
+          className={`mb-6 w-full lg:w-auto px-8 py-4 rounded-lg font-medium transition
+    flex items-center justify-center gap-2
+    ${
+      isFormComplete
+        ? "bg-cyan-500 hover:bg-cyan-600 text-white"
+        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+    }
+    ${isLoading ? "opacity-60" : ""}
+  `}
         >
-          {t.quick_generate_button}
+          {isLoading ? (
+            <>
+              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {t.quick_generate_button_loading}
+            </>
+          ) : (
+            t.quick_generate_button
+          )}
         </button>
       </div>
+      {showPremiumModal && (
+        <PremiumLockModal
+          t={t}
+          onClose={() => {
+            setShowPremiumModal(false);
+            setForm((prev) => ({ ...prev, difficulty: previousDifficulty }));
+          }}
+        />
+      )}
     </div>
   );
 }

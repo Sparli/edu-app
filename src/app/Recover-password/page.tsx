@@ -5,11 +5,48 @@ import { FaEnvelope } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
+import authApi from "../utils/authApi";
+import { useState } from "react";
+import type { AxiosError } from "axios";
 
 const RecoverPasswordPage = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleRequestOtp = async () => {
+    if (!email || !email.includes("@")) {
+      setError("Please enter a valid email.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await authApi.post("/users/forgot-password/request-otp/", {
+        email,
+      });
+
+      const data = res.data;
+      setLoading(false);
+
+      if (data.success) {
+        router.push(`/otp2?email=${encodeURIComponent(email)}`);
+      } else {
+        setError(data.error || "Unknown error.");
+      }
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ error: string }>;
+      setError(
+        error?.response?.data?.error ||
+          "Something went wrong. Please try again."
+      );
+
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -52,16 +89,24 @@ const RecoverPasswordPage = () => {
                 <input
                   type="email"
                   placeholder={t.auth_email_placeholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                 />
+                {error && (
+                  <p className="text-red-500 text-sm mt-2 text-center">
+                    {error}
+                  </p>
+                )}
               </div>
             </div>
 
             <button
               className="w-full p-3 bg-[#23BAD8] text-white rounded-lg hover:bg-cyan-600 transition"
-              onClick={() => router.push("/otp2")}
+              onClick={handleRequestOtp}
+              disabled={loading}
             >
-              {t.recover_button}
+              {loading ? "Sending..." : t.recover_button}
             </button>
 
             <p className="text-center text-gray-600">

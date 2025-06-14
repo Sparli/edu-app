@@ -1,7 +1,19 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http", // 🛑 must match actual runtime protocol
+        hostname: "edulmmersion.croncore.com",
+        pathname: "/media/**",
+      },
+      {
+        protocol: "https", // ✅ optional, in case you upgrade backend URLs later
+        hostname: "edulmmersion.croncore.com",
+        pathname: "/media/**",
+      },
+    ],
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
