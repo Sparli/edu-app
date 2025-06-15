@@ -183,7 +183,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 text-sm font-semibold transition ${
+            className={`pb-2 text-sm font-semibold transition  ${
               activeTab === tab
                 ? "bg-gradient-to-r from-blue-500 to-green-400 bg-clip-text text-transparent border-b-2 border-blue-500"
                 : "text-gray-400"
@@ -200,7 +200,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`rounded-xl border-2 font-medium h-28 w-[110px] transition-all ${
+            className={`rounded-xl border-2 font-medium h-28 w-[110px] transition-all cursor-pointer ${
               activeTab === tab
                 ? "bg-white border-cyan-400 text-black shadow-sm"
                 : "bg-white border-transparent text-gray-500"
@@ -343,7 +343,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
           <div className="flex items-center justify-between">
             {(activeTab === "lesson" || activeTab === "quiz") && (
               <button
-                className="text-gray-500 hover:text-gray-700 transition"
+                className="text-gray-500 hover:text-gray-700 cursor-pointer transition"
                 onClick={() => {
                   if (!error && Object.keys(content.lesson || {}).length > 0) {
                     setShowModal(true);
@@ -360,7 +360,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
                   <p className="text-red-600 text-sm mt-2">{saveError}</p>
                 )}
                 <button
-                  className="bg-green-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-green-600 transition disabled:opacity-50"
+                  className="bg-green-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-green-600 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={handleSaveAll}
                   disabled={
                     !!error ||
@@ -377,7 +377,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
                 </button>
 
                 <button
-                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-cyan-600 transition"
+                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium cursor-pointer hover:bg-cyan-600 transition"
                   onClick={() => setActiveTab("quiz")}
                 >
                   {t.btn_next ?? "Next"}
@@ -387,7 +387,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
 
             {activeTab === "quiz" && (
               <button
-                className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-cyan-600 transition"
+                className="bg-cyan-500 text-white px-4 py-1.5 rounded-md cursor-pointer font-medium hover:bg-cyan-600 transition"
                 onClick={() => setActiveTab("reflection")}
               >
                 {t.btn_next ?? "Next"}
@@ -397,7 +397,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
             {activeTab === "reflection" && (
               <div className="w-full flex justify-end mt-4">
                 <button
-                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-cyan-600 transition disabled:opacity-50"
+                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium hover:bg-cyan-600 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   onClick={handleReflectionSubmit}
                   disabled={
                     !!error ||

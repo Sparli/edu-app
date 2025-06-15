@@ -61,7 +61,7 @@ const Navbar = () => {
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-6 ">
           <div
             className="flex items-center space-x-2"
             onMouseEnter={() => setIsHovered(true)}
@@ -207,6 +207,16 @@ const Navbar = () => {
               }}
             />
             <NavItem
+              src="/images/doc.png" // use your icon here
+              label={t.sidebar_my_content}
+              href="/content"
+              onClick={() => {
+                router.push("/content");
+                setMenuOpen(false);
+              }}
+            />
+
+            <NavItem
               src="/images/sub.png"
               label={t.sidebar_subscription}
               href="/subscription"
@@ -321,7 +331,7 @@ const NavItem = ({
   onClick?: () => void;
 }) => {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive = pathname.startsWith(href);
 
   // Automatically switch to white icon version if active
   const iconSrc = isActive
@@ -352,7 +362,7 @@ const ToggleSwitch = ({
 }) => (
   <button
     onClick={() => setEnabled(!enabled)}
-    className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
+    className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 cursor-pointer ${
       enabled ? "bg-[#23BAD8]" : "bg-gray-300"
     }`}
   >

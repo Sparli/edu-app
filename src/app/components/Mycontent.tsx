@@ -205,7 +205,7 @@ export default function MyContentPage() {
             <div className="relative">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#f5f5f5] rounded-md text-gray-700"
+                className="flex items-center gap-2 px-4 py-2 bg-[#f5f5f5] rounded-md cursor-pointer text-gray-700"
               >
                 Filter ({activeFilterCount})
                 <svg
@@ -268,7 +268,7 @@ export default function MyContentPage() {
                     {(selectedSubject || selectedLevel || searchTerm) && (
                       <button
                         onClick={clearFilters}
-                        className="text-sm text-red-600 hover:underline whitespace-nowrap"
+                        className="text-sm text-red-600 hover:underline whitespace-nowrap cursor-pointer"
                       >
                         {language === "fr"
                           ? "Réinitialiser les filtres"
@@ -321,7 +321,11 @@ export default function MyContentPage() {
 
         {/* Lesson Cards */}
 
-        {lessons.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[300px] w-full">
+            <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : lessons.length === 0 ? (
           <div className="flex flex-col items-center justify-center mt-12 text-center text-gray-500">
             <Image
               src="/images/book.jpg" // optional icon
@@ -361,11 +365,12 @@ export default function MyContentPage() {
                       {translateSubject(item.subject)}
                     </div>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✅ prevent opening the modal
                         setLessonToDelete(item.id);
                         setShowDeleteModal(true);
                       }}
-                      className="text-red-500 bg-red-100 p-1 rounded-full hover:bg-red-200 transition"
+                      className="text-red-500 bg-red-100 p-1 rounded-full cursor-pointer hover:bg-red-200 transition"
                       title="Delete Lesson"
                     >
                       <IoTrashOutline size={18} />
@@ -398,14 +403,15 @@ export default function MyContentPage() {
                   <div className="flex gap-3 items-center">
                     <button
                       onClick={() => setSelectedLessonId(item.id)}
-                      className="bg-[#23BAD8] hover:bg-cyan-600 text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
+                      className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
                     >
                       View
                     </button>
 
                     <button
-                      className="bg-red-500 text-white px-4 lg:py-[10px] rounded-xl py-2 lg:w-1/3 w-full text-lg"
-                      onClick={() => {
+                      className="bg-red-500 text-white px-4 lg:py-[10px] rounded-xl cursor-pointer py-2 lg:w-1/3 w-full text-lg"
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✅ prevent opening the modal
                         setLessonToDelete(item.id);
                         setShowDeleteModal(true);
                       }}
@@ -433,7 +439,7 @@ export default function MyContentPage() {
             <button
               onClick={() => fetchLessons(prevPageUrl!)}
               disabled={!prevPageUrl || isLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border transition ${
                 prevPageUrl && !isLoading
                   ? "bg-white hover:bg-gray-100 text-gray-700"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -446,7 +452,7 @@ export default function MyContentPage() {
             <button
               onClick={() => fetchLessons(nextPageUrl!)}
               disabled={!nextPageUrl || isLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border transition ${
                 nextPageUrl && !isLoading
                   ? "bg-white hover:bg-gray-100 text-gray-700"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"

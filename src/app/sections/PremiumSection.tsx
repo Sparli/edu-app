@@ -96,7 +96,7 @@ const PremiumSection = () => {
           className={`bg-gradient-to-r from-[#FFCF55] to-[#F0B82C] text-gray-800 lg:text-2xl text-lg font-semibold lg:py-6 lg:px-20 px-10 py-2 rounded-lg shadow-lg transition ${
             loading || isSubscribed
               ? "opacity-50 cursor-not-allowed"
-              : "hover:opacity-90"
+              : "hover:opacity-90 cursor-pointer"
           }`}
         >
           {loading

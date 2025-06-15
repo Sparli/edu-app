@@ -90,7 +90,7 @@ const DashboardCard = ({
     <p className="text-[#4B5563] text-lg mb-6  mx-12">{description}</p>
     <button
       onClick={onClick || undefined}
-      className="lg:px-18 lg:py-4 px-4 py-2 bg-[#23BAD8] text-white rounded-lg hover:bg-cyan-600 transition"
+      className="lg:px-18 lg:py-4 px-4 py-2 bg-[#23BAD8] cursor-pointer text-white rounded-lg hover:bg-cyan-600 transition"
     >
       {buttonText}
     </button>

@@ -33,7 +33,7 @@ export default function DashboardPage() {
         </div>
 
         {profile?.is_subscribed ? (
-          <div className="hidden lg:flex items-center mb-8 px-6 py-2 bg-yellow-100 text-yellow-800 font-semibold rounded-xl shadow">
+          <div className="hidden lg:flex items-center mb-8  px-6 py-2 bg-yellow-100 text-yellow-800 font-semibold rounded-xl shadow">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-5 h-5 mr-2 fill-current"
@@ -46,7 +46,7 @@ export default function DashboardPage() {
         ) : (
           <button
             onClick={() => router.push("/subscription")}
-            className="hidden lg:flex items-center mb-8 px-6 py-2 bg-[#2BDA2B] text-white font-semibold rounded-xl shadow hover:bg-green-600 transition"
+            className="hidden lg:flex items-center mb-8 px-6 py-2 bg-[#2BDA2B] text-white cursor-pointer font-semibold rounded-xl shadow hover:bg-green-600 transition"
           >
             <FaStar className="mr-2 text-yellow-300" />
             {t.dashboard_upgrade}

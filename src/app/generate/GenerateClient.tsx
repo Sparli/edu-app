@@ -54,6 +54,7 @@ export default function GenerateClient() {
   const [error, setError] = useState<string | null>(null);
   const isFetching = useRef(false); // Prevent multiple fetches
   const { setProfile } = useProfile();
+  // const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
   const triggerError = (msg: string) => {
     setError(msg);
@@ -315,25 +316,31 @@ export default function GenerateClient() {
             initialData={meta || undefined}
             loading={loading}
           />
-          {loading ? (
-            <div ref={resultRef}>
+          <div ref={resultRef}>
+            {loading ? (
               <GeneratedContentSkeleton />
-            </div>
-          ) : (
-            <div ref={resultRef}>
-              {meta && (
-                <GeneratedContent
-                  content={content || { lesson: {}, quiz: {}, reflection: "" }}
-                  meta={{
-                    topic: meta.topic,
-                    subject: meta.subject,
-                    level: meta.level,
-                  }}
-                  error={error}
-                />
-              )}
-            </div>
-          )}
+            ) : error && meta ? (
+              <GeneratedContent
+                content={{ lesson: {}, quiz: {}, reflection: "" }}
+                meta={{
+                  topic: meta.topic,
+                  subject: meta.subject,
+                  level: meta.level,
+                }}
+                error={error}
+              />
+            ) : meta && content ? (
+              <GeneratedContent
+                content={content}
+                meta={{
+                  topic: meta.topic,
+                  subject: meta.subject,
+                  level: meta.level,
+                }}
+                error={null}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

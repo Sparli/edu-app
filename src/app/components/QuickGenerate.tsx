@@ -377,7 +377,7 @@ export default function QuickGenerate() {
     flex items-center justify-center gap-2
     ${
       isFormComplete
-        ? "bg-cyan-500 hover:bg-cyan-600 text-white"
+        ? "bg-cyan-500 hover:bg-cyan-600 text-white cursor-pointer"
         : "bg-gray-300 text-gray-500 cursor-not-allowed"
     }
     ${isLoading ? "opacity-60" : ""}

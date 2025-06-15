@@ -161,7 +161,10 @@ const ProfileModal = ({
         ref={modalRef}
         className="bg-white rounded-2xl p-6 sm:p-10 w-full max-w-3xl min-h-[686px] relative"
       >
-        <button onClick={onClose} className="absolute right-6 top-6 text-xl">
+        <button
+          onClick={onClose}
+          className="absolute cursor-pointer right-6 top-6 text-xl"
+        >
           <FaTimes />
         </button>
 
@@ -285,7 +288,7 @@ const ProfileModal = ({
 
               <button
                 type="button"
-                className="px-6 py-2 rounded-2xl border border-gray-500 text-lg"
+                className="px-6 py-2 rounded-2xl border border-gray-500 cursor-pointer text-lg"
                 onClick={() => inputRef.current?.click()}
               >
                 {t.profile_update}
@@ -293,7 +296,7 @@ const ProfileModal = ({
 
               <button
                 type="button"
-                className="flex items-center gap-2 text-lg text-red-600"
+                className="flex items-center gap-2 text-lg text-red-600 cursor-pointer"
                 onClick={() => {
                   setImageFile(null);
                   setPreview(null);
@@ -351,13 +354,13 @@ const ProfileModal = ({
           <div className="mt-12 flex gap-4">
             <button
               onClick={handleSave}
-              className="bg-[#23BAD8] hover:bg-cyan-600 text-white lg:px-6 px-4 py-3 rounded-lg lg:w-1/3 font-semibold"
+              className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white lg:px-6 px-4 py-3 rounded-lg lg:w-1/3 font-semibold"
             >
               {t.profile_save}
             </button>
             <button
               onClick={onClose}
-              className="bg-gray-100 text-gray-600 lg:px-6 px-4 py-3 rounded-lg lg:w-1/3"
+              className="bg-gray-100 text-gray-600 cursor-pointer lg:px-6 px-4 py-3 rounded-lg lg:w-1/3"
             >
               {t.profile_cancel}
             </button>

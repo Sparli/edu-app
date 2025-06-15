@@ -139,7 +139,7 @@ const Feedback = () => {
         <button
           onClick={handleSubmit}
           disabled={submitStatus === "loading"}
-          className="lg:w-1/3 p-4 mt-4 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-500 to-green-400 hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="lg:w-1/3 p-4 mt-4 rounded-lg text-white font-semibold bg-gradient-to-r from-blue-500 to-green-400 hover:opacity-90 transition shadow-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitStatus === "loading" ? "Submitting..." : t.feedback_submit}
         </button>

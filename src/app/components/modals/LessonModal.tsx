@@ -127,7 +127,7 @@ export default function LessonModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-black"
+          className="absolute top-4 right-4 text-gray-400 cursor-pointer hover:text-black"
         >
           <FiX size={24} />
         </button>
@@ -153,7 +153,7 @@ export default function LessonModal({
           </div>
           <div className="flex gap-6 text-gray-600 mt-10 text-sm flex-wrap">
             <button
-              className="flex items-center gap-1 hover:text-black"
+              className="flex items-center gap-1 hover:text-black cursor-pointer"
               onClick={() => {
                 const params = new URLSearchParams({
                   language: language === "en" ? "English" : "French",
@@ -173,7 +173,7 @@ export default function LessonModal({
             </button>
 
             <button
-              className="flex items-center gap-1 hover:text-black"
+              className="flex items-center gap-1 hover:text-black cursor-pointer"
               onClick={handleDownload}
             >
               <FiDownload />
@@ -216,7 +216,7 @@ export default function LessonModal({
 
             <div className="flex justify-start items-start gap-4 text-gray-600 text-sm pt-1 min-w-[80px]">
               <button
-                className="flex items-center gap-1 hover:text-black"
+                className="flex items-center gap-1 hover:text-black cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
                   const text = Object.entries(content.lesson)
@@ -309,7 +309,7 @@ export default function LessonModal({
               className={`px-7 py-2 rounded-lg transition float-right ${
                 hasSubmittedFeedback
                   ? "bg-gray-400 text-white cursor-not-allowed"
-                  : "bg-cyan-500 text-white hover:bg-cyan-600"
+                  : "bg-cyan-500 text-white hover:bg-cyan-600 cursor-pointer"
               }`}
             >
               {hasSubmittedFeedback ? "Submitted" : t.modal_feedback_submit}

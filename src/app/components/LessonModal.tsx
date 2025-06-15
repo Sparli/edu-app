@@ -137,7 +137,7 @@ export default function LessonModal({ lessonId, onClose }: Props) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 transition text-2xl"
+          className="absolute top-4 right-4 cursor-pointer text-gray-500 hover:text-gray-900 transition text-2xl"
           aria-label={t.lesson_modal.close}
         >
           &times;
@@ -172,7 +172,7 @@ export default function LessonModal({ lessonId, onClose }: Props) {
           {/* RIGHT: Download */}
           <div>
             <button
-              className="flex items-center gap-1 hover:text-black mt-23.5"
+              className="flex items-center gap-1 hover:text-black cursor-pointer mt-23.5"
               onClick={handleDownload}
             >
               <FiDownload />
@@ -185,11 +185,41 @@ export default function LessonModal({ lessonId, onClose }: Props) {
 
         {/* Content */}
         <div className="prose max-w-none text-gray-800">
-          {lessonData.lesson && Object.entries(lessonData.lesson).length > 0 ? (
-            Object.entries(lessonData.lesson).map(([key, value]) => (
-              <div key={key} className="mb-6">
+          {/* Title */}
+          {lessonData.lesson?.Title && (
+            <div className="mb-6">
+              <h3 className="capitalize font-semibold text-2xl mb-2">Title</h3>
+              {typeof lessonData.lesson.Title === "string" ? (
+                <p className="text-lg">
+                  <MathText content={lessonData.lesson.Title} />
+                </p>
+              ) : Array.isArray(lessonData.lesson.Title) ? (
+                <ul className="list-disc pl-5 text-lg space-y-1">
+                  {lessonData.lesson.Title.map((item: string, idx: number) => (
+                    <li key={idx}>
+                      <MathText content={item} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          )}
+
+          {/* Ordered Sections */}
+          {[
+            "Introduction",
+            "Core Explanation",
+            "Practical Examples",
+            "Competency Focus",
+            "Conclusion",
+          ].map((section) => {
+            const value = lessonData.lesson?.[section];
+            if (!value) return null;
+
+            return (
+              <div key={section} className="mb-6">
                 <h3 className="capitalize font-semibold text-2xl mb-2">
-                  {key.replace(/_/g, " ")}
+                  {section}
                 </h3>
 
                 {Array.isArray(value) ? (
@@ -206,10 +236,8 @@ export default function LessonModal({ lessonId, onClose }: Props) {
                   </p>
                 )}
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500">{t.lesson_modal.no_content}</p>
-          )}
+            );
+          })}
         </div>
       </div>
     </div>

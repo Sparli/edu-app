@@ -212,7 +212,7 @@ export default function QuizModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-black"
+          className="absolute top-4 right-4 text-gray-500 hover:text-black cursor-pointer"
         >
           <X size={24} />
         </button>
@@ -273,7 +273,7 @@ export default function QuizModal({
                     <button
                       key={i}
                       className={`
-        px-5 py-1.5 rounded-md transition
+        px-5 py-1.5 rounded-md transition cursor-pointer
         ${
           showBlue
             ? "bg-cyan-500 text-white"
@@ -334,7 +334,7 @@ export default function QuizModal({
                     <button
                       key={label}
                       className={`
-        px-5 py-1.5 rounded-md transition
+        px-5 py-1.5 rounded-md transition cursor-pointer
         ${
           showBlue
             ? "bg-cyan-500 text-white"
@@ -381,11 +381,11 @@ export default function QuizModal({
           </div>
 
           {/* RIGHT: Submit + Toggle button */}
-          <div className="flex gap-6 items-center">
+          <div className="flex gap-6 items-center cursor-pointer">
             {hasSubmitted && (
               <button
                 onClick={() => setShowSelectedOnly((prev) => !prev)}
-                className="text-sm font-medium text-cyan-600 hover:underline transition whitespace-nowrap"
+                className="text-sm font-medium text-cyan-600 hover:underline transition whitespace-nowrap cursor-pointer"
               >
                 {showSelectedOnly
                   ? t.quiz_modal_toggle_result
@@ -399,7 +399,7 @@ export default function QuizModal({
               className={`bg-cyan-500 text-white px-6 py-2 rounded-md transition ${
                 loading || result
                   ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-cyan-600"
+                  : "hover:bg-cyan-600 cursor-pointer"
               }`}
             >
               {loading ? "Submitting..." : t.quiz_modal_button_submit}

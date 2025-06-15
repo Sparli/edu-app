@@ -56,6 +56,13 @@ const Sidebar = () => {
             href="/generate"
           />
           <SidebarLink
+            imageSrc="/images/doc.png" // ✅ Add this icon in /public/images
+            activeImageSrc="/images/doc-wh.svg" // ✅ Optional white version
+            label={t.sidebar_my_content}
+            href="/content"
+          />
+
+          <SidebarLink
             imageSrc="/images/sub.png"
             activeImageSrc="/images/sub-wh.svg"
             label={t.sidebar_subscription}
