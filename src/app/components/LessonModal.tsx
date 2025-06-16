@@ -6,6 +6,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
 import MathText from "@/app/components/MathText";
 import { FiDownload } from "react-icons/fi";
+import axios from "axios";
 
 interface Props {
   lessonId: number;
@@ -29,61 +30,7 @@ export default function LessonModal({ lessonId, onClose }: Props) {
   const { language } = useLanguage();
   const t = translations[language];
   const [downloading, setDownloading] = useState(false);
-  // const pdfRef = useRef<HTMLDivElement>(null);
-
-  // PDF download
-
-  const handleDownload = async () => {
-    if (!lessonData?.lesson) return;
-    setDownloading(true);
-    try {
-      const pdfContent = document.createElement("div");
-      pdfContent.style.padding = "20px";
-      pdfContent.style.fontFamily = "Arial, sans-serif";
-      pdfContent.style.color = "#111";
-
-      const title = `<h1>${lessonData.topic}</h1>`;
-      const meta = `<p><strong>${lessonData.subject}</strong> - ${
-        lessonData.level
-      } <br/> ${new Date(
-        lessonData.generation_datetime
-      ).toLocaleDateString()}</p>`;
-
-      const lessonHtml = Object.entries(lessonData.lesson)
-        .map(([sectionKey, sectionContent]) => {
-          const heading = `<h2>${sectionKey.replace(/_/g, " ")}</h2>`;
-          const body = Array.isArray(sectionContent)
-            ? `<ul>${sectionContent
-                .map((item) => `<li>${item}</li>`)
-                .join("")}</ul>`
-            : `<p>${sectionContent}</p>`;
-          return `${heading}${body}`;
-        })
-        .join("<hr/>");
-
-      pdfContent.innerHTML = `${title}${meta}<hr/>${lessonHtml}`;
-
-      const html2pdf = (await import("html2pdf.js")).default;
-
-      await html2pdf()
-        .from(pdfContent)
-        .set({
-          margin: 0.5,
-          filename: `${lessonData.topic.replace(/\s+/g, "_")}_lesson.pdf`,
-          html2canvas: { scale: 2 },
-          jsPDF: {
-            unit: "in",
-            format: "letter",
-            orientation: "portrait",
-          },
-        })
-        .save();
-    } catch (err) {
-      console.error("Download failed:", err);
-    } finally {
-      setDownloading(false);
-    }
-  };
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -146,14 +93,14 @@ export default function LessonModal({ lessonId, onClose }: Props) {
         <div className="flex justify-between items-start mb-8">
           {/* LEFT: Title + Meta */}
           <div>
-            <h2 className="text-2xl font-bold mb-2">
+            <h2 className="lg:text-2xl text-xl font-bold mb-2">
               {lessonData.topic
                 .split(" ")
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(" ")}
             </h2>
 
-            <div className="text-lg text-gray-600">
+            <div className="lg:text-lg text-gray-600">
               <p>
                 <strong>{t.lesson_modal.subject}:</strong>{" "}
                 {t.subjects[lessonData.subject as keyof typeof t.subjects]}
@@ -172,12 +119,69 @@ export default function LessonModal({ lessonId, onClose }: Props) {
           {/* RIGHT: Download */}
           <div>
             <button
-              className="flex items-center gap-1 hover:text-black cursor-pointer mt-23.5"
-              onClick={handleDownload}
+              className="flex items-center gap-1 hover:text-black cursor-pointer mt-44 lg:mt-23.5 disabled:opacity-50"
+              onClick={async () => {
+                setDownloading(true);
+                setDownloadError(null);
+                try {
+                  const res = await authApi.get(
+                    `/history/download-pdf/${lessonId}/`
+                  );
+                  const { success, pdf_url } = res.data;
+                  if (success && pdf_url) {
+                    window.open(pdf_url, "_blank");
+                  } else {
+                    setDownloadError("PDF not ready. Please try again.");
+                  }
+                } catch (err: unknown) {
+                  if (axios.isAxiosError(err) && err.response) {
+                    const status = err.response.status;
+                    const isFr = language === "fr";
+
+                    if (status === 404) {
+                      setDownloadError(
+                        isFr
+                          ? "Leçon introuvable."
+                          : "Couldn’t find that lesson."
+                      );
+                    } else if (status === 500) {
+                      setDownloadError(
+                        isFr
+                          ? "Erreur lors de la génération du PDF. Veuillez réessayer."
+                          : "Error generating PDF. Please try again."
+                      );
+                    } else if (status === 401) {
+                      setDownloadError(
+                        isFr
+                          ? "Session expirée. Veuillez vous reconnecter."
+                          : "Session expired. Please log in again."
+                      );
+                    } else {
+                      setDownloadError(
+                        isFr
+                          ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                          : "Could not download PDF. Try again later."
+                      );
+                    }
+                  } else {
+                    setDownloadError("An unexpected error occurred.");
+                  }
+                  console.error("[LessonModal] ❌ PDF Download failed", err);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              disabled={downloading}
             >
-              <FiDownload />
-              {downloading ? "Downloading..." : t.modal_download}
+              <div className="text-sm flex gap-2">
+                <FiDownload className="mt-0.5 text-lg" />
+
+                {downloading ? "Downloading..." : t.modal_download}
+              </div>
             </button>
+            {downloadError && (
+              <p className="text-sm text-red-600 mt-2">{downloadError}</p>
+            )}
           </div>
         </div>
 
@@ -185,59 +189,32 @@ export default function LessonModal({ lessonId, onClose }: Props) {
 
         {/* Content */}
         <div className="prose max-w-none text-gray-800">
-          {/* Title */}
-          {lessonData.lesson?.Title && (
-            <div className="mb-6">
-              <h3 className="capitalize font-semibold text-2xl mb-2">Title</h3>
-              {typeof lessonData.lesson.Title === "string" ? (
-                <p className="text-lg">
-                  <MathText content={lessonData.lesson.Title} />
-                </p>
-              ) : Array.isArray(lessonData.lesson.Title) ? (
-                <ul className="list-disc pl-5 text-lg space-y-1">
-                  {lessonData.lesson.Title.map((item: string, idx: number) => (
-                    <li key={idx}>
-                      <MathText content={item} />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          )}
+          {lessonData.lesson &&
+            Object.entries(lessonData.lesson).map(([section, value]) => {
+              if (!value) return null;
 
-          {/* Ordered Sections */}
-          {[
-            "Introduction",
-            "Core Explanation",
-            "Practical Examples",
-            "Competency Focus",
-            "Conclusion",
-          ].map((section) => {
-            const value = lessonData.lesson?.[section];
-            if (!value) return null;
+              return (
+                <div key={section} className="mb-6">
+                  <h3 className="capitalize font-semibold text-2xl mb-2">
+                    {section.replace(/_/g, " ")}
+                  </h3>
 
-            return (
-              <div key={section} className="mb-6">
-                <h3 className="capitalize font-semibold text-2xl mb-2">
-                  {section}
-                </h3>
-
-                {Array.isArray(value) ? (
-                  <ul className="list-disc pl-5 text-lg space-y-1">
-                    {value.map((item, idx) => (
-                      <li key={idx}>
-                        <MathText content={item} />
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-lg">
-                    <MathText content={value} />
-                  </p>
-                )}
-              </div>
-            );
-          })}
+                  {Array.isArray(value) ? (
+                    <ul className="list-disc pl-5 text-lg space-y-1">
+                      {value.map((item, idx) => (
+                        <li key={idx}>
+                          <MathText content={item} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-lg">
+                      <MathText content={value} />
+                    </p>
+                  )}
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

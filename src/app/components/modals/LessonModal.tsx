@@ -7,6 +7,8 @@ import { saveContent } from "@/app/api/saveContentApi";
 import { FiEdit, FiDownload, FiCopy, FiX } from "react-icons/fi";
 import { useState, useEffect, useRef } from "react";
 import MathText from "@/app/components/MathText";
+import authApi from "@/app/utils/authApi";
+import axios from "axios";
 
 interface Props {
   content: {
@@ -36,7 +38,6 @@ export default function LessonModal({
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>("");
   const modalRef = useRef<HTMLDivElement>(null);
-  const pdfRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
@@ -45,6 +46,7 @@ export default function LessonModal({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,53 +72,6 @@ export default function LessonModal({
     // ✅ Also restore feedback submit state
     if (feedbackFlag === "true") setHasSubmittedFeedback(true);
   }, []);
-
-  const handleDownload = async () => {
-    setDownloading(true); // must declare: const [downloading, setDownloading] = useState(false);
-    try {
-      const pdfContent = document.createElement("div");
-      pdfContent.style.padding = "20px";
-      pdfContent.style.fontFamily = "Arial, sans-serif";
-      pdfContent.style.color = "#111";
-
-      const title = `<h1>${topic}</h1>`;
-      const meta = `<p><strong>${subject}</strong> - ${level} <br/> ${generatedAt.toLocaleDateString()}</p>`;
-
-      const lessonHtml = Object.entries(content.lesson)
-        .map(([sectionKey, sectionContent]) => {
-          const heading = `<h2>${sectionKey.replace(/_/g, " ")}</h2>`;
-          const body = Array.isArray(sectionContent)
-            ? `<ul>${sectionContent
-                .map((item) => `<li>${item}</li>`)
-                .join("")}</ul>`
-            : `<p>${sectionContent}</p>`;
-          return `${heading}${body}`;
-        })
-        .join("<hr/>");
-
-      pdfContent.innerHTML = `${title}${meta}<hr/>${lessonHtml}`;
-
-      const html2pdf = (await import("html2pdf.js")).default;
-
-      await html2pdf()
-        .from(pdfContent)
-        .set({
-          margin: 0.5,
-          filename: `${topic.replace(/\s+/g, "_")}_lesson.pdf`,
-          html2canvas: { scale: 2 },
-          jsPDF: {
-            unit: "in",
-            format: "letter",
-            orientation: "portrait",
-          },
-        })
-        .save();
-    } catch (err) {
-      console.error("Download failed:", err);
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex justify-center items-center px-4">
@@ -173,19 +128,75 @@ export default function LessonModal({
             </button>
 
             <button
-              className="flex items-center gap-1 hover:text-black cursor-pointer"
-              onClick={handleDownload}
+              className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
+              onClick={async () => {
+                setDownloading(true);
+                setDownloadError(null); // clear previous error
+                try {
+                  const res = await authApi.get("/content/gen/pdf/");
+                  const { success, pdf_url } = res.data;
+                  if (success && pdf_url) {
+                    window.open(pdf_url, "_blank");
+                  } else {
+                    setDownloadError(
+                      language === "fr"
+                        ? "PDF non prêt. Veuillez réessayer."
+                        : "PDF not ready. Please try again."
+                    );
+                  }
+                } catch (err: unknown) {
+                  if (axios.isAxiosError(err) && err.response) {
+                    const status = err.response.status;
+                    const isFr = language === "fr";
+
+                    if (status === 404) {
+                      setDownloadError(
+                        isFr
+                          ? "Veuillez générer le contenu avant de télécharger un PDF."
+                          : "Please generate content before downloading a PDF."
+                      );
+                    } else if (status === 401) {
+                      setDownloadError(
+                        isFr
+                          ? "Session expirée. Veuillez vous reconnecter."
+                          : "Session expired. Please log in again."
+                      );
+                    } else {
+                      setDownloadError(
+                        isFr
+                          ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                          : "Could not download PDF. Try again later."
+                      );
+                    }
+                  } else {
+                    setDownloadError(
+                      language === "fr"
+                        ? "Une erreur inattendue est survenue."
+                        : "An unexpected error occurred."
+                    );
+                  }
+                  console.error("[LessonModal] ❌ PDF Download failed", err);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              disabled={downloading}
             >
               <FiDownload />
               {downloading ? "Downloading..." : t.modal_download}
             </button>
           </div>
+          {downloadError && (
+            <p className="text-sm text-red-600 justify-end mt-2">
+              {downloadError}
+            </p>
+          )}
         </div>
 
         <hr className="mb-10 text-[#E2E2E2]" />
 
         {/* PDF Content */}
-        <div ref={pdfRef}>
+        <div>
           <div className="flex flex-col md:flex-row justify-between gap-6">
             <div className="flex-1 lg:max-w-[90%] text-gray-700 leading-relaxed space-y-6 text-[15px]">
               <div className="space-y-6">
