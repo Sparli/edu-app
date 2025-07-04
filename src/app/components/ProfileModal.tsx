@@ -193,8 +193,8 @@ const ProfileModal = ({
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium mb-4 hover:bg-gray-200 cursor-help"
               title={
                 language === "fr"
-                  ? "En tant qu'utilisateur de base, vous pouvez générer jusqu'à 10 éléments par jour."
-                  : "As a Basic user, you can generate up to 10 items per day. Upgrade anytime to lift the limit!"
+                  ? "En tant qu'utilisateur de base, vous pouvez générer jusqu'à 1 élément par jour."
+                  : "As a Basic user, you can generate 1 item per day. Upgrade anytime to lift the limit!"
               }
             >
               <svg

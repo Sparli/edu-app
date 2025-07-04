@@ -9,10 +9,13 @@ export interface Profile {
   is_subscribed: boolean;
   profile_image?: string;
   subscription_status?: string;
-  // ✨ Add these:
   daily_quota_used?: number;
   daily_quota_limit?: number;
   daily_quota_date?: string | null;
+
+  // ✅ Add here:
+  gender?: "male" | "female";
+  first_visit?: boolean;
 }
 
 type ProfileContextType = {

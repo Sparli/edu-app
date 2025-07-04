@@ -71,29 +71,34 @@ const DashboardCard = ({
   isActive?: boolean;
 }) => (
   <div
-    className={`${
-      isActive ? "bg-[#DAE9FF]" : "lg:bg-[#f7f9fc] bg-[#AB79FF1A]"
-    } hover:border-[#23BAD8] border-[#ffffff] hover:border rounded-2xl p-6 xl:min-w-[320.625px] xl:min-h-[381.375px] content-center transition text-center`}
+    className={`rounded-[20px] ${
+      isActive ? "p-[2px] bg-gradient-to-tr from-[#0463EF] to-[#16EA9E]" : ""
+    }`}
   >
-    <div className="lg:w-30 lg:h-30 h-20 w-20 bg-[#23BAD8] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
-      <Image
-        src={imageSrc}
-        alt={title}
-        width={90}
-        height={90}
-        className="lg:w-15 lg:h-15 w-10 h-10"
-      />
-    </div>
-    <h3 className="text-xl lg:text-2xl font-semibold text-[##1F2937] mb-2">
-      {title}
-    </h3>
-    <p className="text-[#4B5563] text-lg mb-6  mx-12">{description}</p>
-    <button
-      onClick={onClick || undefined}
-      className="lg:px-18 lg:py-4 px-4 py-2 bg-[#23BAD8] cursor-pointer text-white rounded-lg hover:bg-cyan-600 transition"
+    <div
+      className={`rounded-[18px] p-6 xl:min-w-[320.625px] xl:min-h-[381.375px] content-center text-center transition
+      ${isActive ? "bg-[#DAE9FF]" : "lg:bg-[#f7f9fc] bg-[#AB79FF1A]"}`}
     >
-      {buttonText}
-    </button>
+      <div className="lg:w-30 lg:h-30 h-20 w-20 bg-[#23BAD8] bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Image
+          src={imageSrc}
+          alt={title}
+          width={90}
+          height={90}
+          className="lg:w-15 lg:h-15 w-10 h-10"
+        />
+      </div>
+      <h3 className="text-xl lg:text-2xl font-semibold text-[##1F2937] mb-2">
+        {title}
+      </h3>
+      <p className="text-[#4B5563] text-lg mb-6  mx-12">{description}</p>
+      <button
+        onClick={onClick || undefined}
+        className="lg:px-18 lg:py-4 px-4 py-2 bg-[#23BAD8] cursor-pointer text-white rounded-lg hover:bg-cyan-600 transition"
+      >
+        {buttonText}
+      </button>
+    </div>
   </div>
 );
 

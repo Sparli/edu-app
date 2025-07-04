@@ -49,3 +49,33 @@ input[type="range"].thumb-blue::-ms-thumb {
   border: none;
   cursor: pointer;
 }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  /* overflow: hidden; prevent full page scroll */
+}
+
+
+@keyframes dotFade {
+  0%, 80%, 100% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.dot1 {
+  animation: dotFade 1.4s infinite ease-in-out;
+  animation-delay: 0s;
+}
+.dot2 {
+  animation: dotFade 1.4s infinite ease-in-out;
+  animation-delay: 0.2s;
+}
+.dot3 {
+  animation: dotFade 1.4s infinite ease-in-out;
+  animation-delay: 0.4s;
+}

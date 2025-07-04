@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from "react";
 import MathText from "@/app/components/MathText";
 import authApi from "@/app/utils/authApi";
 import axios from "axios";
+import { useProfile } from "@/app/context/ProfileContext";
 
 interface Props {
   content: {
@@ -47,6 +48,8 @@ export default function LessonModal({
   const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const { profile } = useProfile();
+  const isSubscribed = profile?.is_subscribed === true;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -126,65 +129,69 @@ export default function LessonModal({
               <FiEdit />
               {t.modal_edit}
             </button>
+            {isSubscribed && (
+              <button
+                className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
+                onClick={async () => {
+                  setDownloading(true);
+                  setDownloadError(null); // clear previous error
+                  try {
+                    const res = await authApi.get("/content/gen/pdf/", {
+                      params: { type: "lesson" },
+                    });
 
-            <button
-              className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
-              onClick={async () => {
-                setDownloading(true);
-                setDownloadError(null); // clear previous error
-                try {
-                  const res = await authApi.get("/content/gen/pdf/");
-                  const { success, pdf_url } = res.data;
-                  if (success && pdf_url) {
-                    window.open(pdf_url, "_blank");
-                  } else {
-                    setDownloadError(
-                      language === "fr"
-                        ? "PDF non prêt. Veuillez réessayer."
-                        : "PDF not ready. Please try again."
-                    );
-                  }
-                } catch (err: unknown) {
-                  if (axios.isAxiosError(err) && err.response) {
-                    const status = err.response.status;
-                    const isFr = language === "fr";
-
-                    if (status === 404) {
-                      setDownloadError(
-                        isFr
-                          ? "Veuillez générer le contenu avant de télécharger un PDF."
-                          : "Please generate content before downloading a PDF."
-                      );
-                    } else if (status === 401) {
-                      setDownloadError(
-                        isFr
-                          ? "Session expirée. Veuillez vous reconnecter."
-                          : "Session expired. Please log in again."
-                      );
+                    const { success, pdf_url } = res.data;
+                    if (success && pdf_url) {
+                      window.open(pdf_url, "_blank");
                     } else {
                       setDownloadError(
-                        isFr
-                          ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
-                          : "Could not download PDF. Try again later."
+                        language === "fr"
+                          ? "PDF non prêt. Veuillez réessayer."
+                          : "PDF not ready. Please try again."
                       );
                     }
-                  } else {
-                    setDownloadError(
-                      language === "fr"
-                        ? "Une erreur inattendue est survenue."
-                        : "An unexpected error occurred."
-                    );
+                  } catch (err: unknown) {
+                    if (axios.isAxiosError(err) && err.response) {
+                      const status = err.response.status;
+                      const isFr = language === "fr";
+
+                      if (status === 404) {
+                        setDownloadError(
+                          isFr
+                            ? "Veuillez générer le contenu avant de télécharger un PDF."
+                            : "Please generate content before downloading a PDF."
+                        );
+                      } else if (status === 401) {
+                        setDownloadError(
+                          isFr
+                            ? "Session expirée. Veuillez vous reconnecter."
+                            : "Session expired. Please log in again."
+                        );
+                      } else {
+                        setDownloadError(
+                          isFr
+                            ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                            : "Could not download PDF. Try again later."
+                        );
+                      }
+                    } else {
+                      setDownloadError(
+                        language === "fr"
+                          ? "Une erreur inattendue est survenue."
+                          : "An unexpected error occurred."
+                      );
+                    }
+                    console.error("[LessonModal] ❌ PDF Download failed", err);
+                  } finally {
+                    setDownloading(false);
                   }
-                  console.error("[LessonModal] ❌ PDF Download failed", err);
-                } finally {
-                  setDownloading(false);
-                }
-              }}
-              disabled={downloading}
-            >
-              <FiDownload />
-              {downloading ? "Downloading..." : t.modal_download}
-            </button>
+                }}
+                disabled={downloading}
+              >
+                <FiDownload />
+                {downloading ? "Downloading..." : t.modal_download}
+              </button>
+            )}
           </div>
           {downloadError && (
             <p className="text-sm text-red-600 justify-end mt-2">

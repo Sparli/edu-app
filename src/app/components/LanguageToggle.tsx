@@ -1,11 +1,9 @@
 "use client";
-import { useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import Image from "next/image";
 
 const LanguageToggle = ({ className = "" }: { className?: string }) => {
   const { language, setLanguage } = useLanguage();
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleSwitch = () => {
     setLanguage(language === "en" ? "fr" : "en");
@@ -14,11 +12,7 @@ const LanguageToggle = ({ className = "" }: { className?: string }) => {
   const isEnglish = language === "en";
 
   return (
-    <div
-      className={`flex items-center space-x-2 ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className={`flex items-center space-x-2 ${className}`}>
       {/* Language Icon */}
       <Image
         src="/images/lang.png"
@@ -28,15 +22,9 @@ const LanguageToggle = ({ className = "" }: { className?: string }) => {
         className="cursor-pointer"
       />
 
-      {/* Dynamic Label */}
-      <span className="text-black text-sm cursor-pointer hover:text-cyan-500">
-        {isHovered
-          ? isEnglish
-            ? "Français"
-            : "English"
-          : isEnglish
-          ? "English"
-          : "Français"}
+      {/* Static Disabled Language Label */}
+      <span className="text-black text-sm">
+        {isEnglish ? "French" : "Anglais"}
       </span>
 
       {/* Toggle Button */}

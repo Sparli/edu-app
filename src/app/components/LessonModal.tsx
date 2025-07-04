@@ -7,6 +7,7 @@ import { translations } from "@/app/translations";
 import MathText from "@/app/components/MathText";
 import { FiDownload } from "react-icons/fi";
 import axios from "axios";
+import { useProfile } from "@/app/context/ProfileContext";
 
 interface Props {
   lessonId: number;
@@ -31,6 +32,8 @@ export default function LessonModal({ lessonId, onClose }: Props) {
   const t = translations[language];
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const { profile } = useProfile();
+  const isSubscribed = profile?.is_subscribed === true;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -118,67 +121,72 @@ export default function LessonModal({ lessonId, onClose }: Props) {
 
           {/* RIGHT: Download */}
           <div>
-            <button
-              className="flex items-center gap-1 hover:text-black cursor-pointer mt-44 lg:mt-23.5 disabled:opacity-50"
-              onClick={async () => {
-                setDownloading(true);
-                setDownloadError(null);
-                try {
-                  const res = await authApi.get(
-                    `/history/download-pdf/${lessonId}/`
-                  );
-                  const { success, pdf_url } = res.data;
-                  if (success && pdf_url) {
-                    window.open(pdf_url, "_blank");
-                  } else {
-                    setDownloadError("PDF not ready. Please try again.");
-                  }
-                } catch (err: unknown) {
-                  if (axios.isAxiosError(err) && err.response) {
-                    const status = err.response.status;
-                    const isFr = language === "fr";
+            {isSubscribed && (
+              <button
+                className="flex items-center gap-1 hover:text-black cursor-pointer mt-44 lg:mt-23.5 disabled:opacity-50"
+                onClick={async () => {
+                  setDownloading(true);
+                  setDownloadError(null);
+                  try {
+                    const res = await authApi.get("/history/download-pdf/", {
+                      params: { type: "lesson", id: lessonId },
+                    });
 
-                    if (status === 404) {
-                      setDownloadError(
-                        isFr
-                          ? "Leçon introuvable."
-                          : "Couldn’t find that lesson."
-                      );
-                    } else if (status === 500) {
-                      setDownloadError(
-                        isFr
-                          ? "Erreur lors de la génération du PDF. Veuillez réessayer."
-                          : "Error generating PDF. Please try again."
-                      );
-                    } else if (status === 401) {
-                      setDownloadError(
-                        isFr
-                          ? "Session expirée. Veuillez vous reconnecter."
-                          : "Session expired. Please log in again."
-                      );
+                    const { success, pdf_url } = res.data;
+                    if (success && pdf_url) {
+                      window.open(pdf_url, "_blank");
                     } else {
-                      setDownloadError(
-                        isFr
-                          ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
-                          : "Could not download PDF. Try again later."
-                      );
+                      setDownloadError("PDF not ready. Please try again.");
                     }
-                  } else {
-                    setDownloadError("An unexpected error occurred.");
-                  }
-                  console.error("[LessonModal] ❌ PDF Download failed", err);
-                } finally {
-                  setDownloading(false);
-                }
-              }}
-              disabled={downloading}
-            >
-              <div className="text-sm flex gap-2">
-                <FiDownload className="mt-0.5 text-lg" />
+                  } catch (err: unknown) {
+                    if (axios.isAxiosError(err) && err.response) {
+                      const status = err.response.status;
+                      const isFr = language === "fr";
 
-                {downloading ? "Downloading..." : t.modal_download}
-              </div>
-            </button>
+                      if (status === 404) {
+                        setDownloadError(
+                          isFr
+                            ? "Leçon introuvable."
+                            : "Couldn’t find that lesson."
+                        );
+                      } else if (status === 500) {
+                        setDownloadError(
+                          isFr
+                            ? "Erreur lors de la génération du PDF. Veuillez réessayer."
+                            : "Error generating PDF. Please try again."
+                        );
+                      } else if (status === 401) {
+                        setDownloadError(
+                          isFr
+                            ? "Session expirée. Veuillez vous reconnecter."
+                            : "Session expired. Please log in again."
+                        );
+                      } else {
+                        setDownloadError(
+                          isFr
+                            ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                            : "Could not download PDF. Try again later."
+                        );
+                      }
+                    } else {
+                      setDownloadError("An unexpected error occurred.");
+                    }
+                    console.error("[LessonModal] ❌ PDF Download failed", err);
+                  } finally {
+                    setDownloading(false);
+                  }
+                }}
+                disabled={downloading}
+              >
+                <div className="text-sm flex gap-2">
+                  <FiDownload className="mt-0.5 text-lg" />
+
+                  {downloading ? "Downloading..." : t.modal_download}
+                </div>
+              </button>
+            )}
+
+            {/* Error Message */}
             {downloadError && (
               <p className="text-sm text-red-600 mt-2">{downloadError}</p>
             )}

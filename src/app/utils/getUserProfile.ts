@@ -7,6 +7,9 @@ export interface UserProfile {
   profile_image: string | null;
   is_subscribed: boolean;
   subscription_status: string;
+  gender?: "male" | "female";
+first_visit?: boolean;
+
 
   // ✅ Add these
   daily_quota_used?: number;
@@ -28,6 +31,9 @@ return {
   profile_image: profile.profile_image,
   is_subscribed: profile.is_subscribed,
   subscription_status: profile.subscription_status,
+  gender: profile.gender,
+first_visit: profile.first_visit,
+
 
   // ✅ Add these
   daily_quota_used: profile.daily_quota_used,

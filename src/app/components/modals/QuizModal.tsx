@@ -4,11 +4,15 @@ import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import authApi from "@/app/utils/authApi";
 import type { AxiosError } from "axios";
-import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
 import type { Level, Subject, QuizSubmitResult } from "@/app/types/content";
 import MathText from "@/app/components/MathText";
 import { saveContent } from "@/app/api/saveContentApi";
+import { FiDownload } from "react-icons/fi";
+import axios from "axios";
+import { useProfile } from "@/app/context/ProfileContext";
+
+type Language = "English" | "French";
 
 interface Props {
   content: {
@@ -23,6 +27,7 @@ interface Props {
   topic: string;
   subject: Subject;
   level: Level;
+  language: Language;
   generatedAt: Date;
   onClose: () => void;
 }
@@ -86,7 +91,7 @@ export default function QuizModal({
   onClose,
   subject,
   level,
-
+  language,
   generatedAt,
 }: Props) {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -99,6 +104,10 @@ export default function QuizModal({
   const [error, setError] = useState<string | null>(null);
   const [showCorrectness, setShowCorrectness] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const { profile } = useProfile();
+  const isSubscribed = profile?.is_subscribed === true;
 
   const handleSubmit = async () => {
     if (loading) return;
@@ -112,7 +121,7 @@ export default function QuizModal({
 
     if (answeredCount < totalQuestions) {
       setError(
-        language === "fr"
+        langKey === "fr"
           ? "Veuillez répondre à toutes les questions avant de soumettre."
           : "Please answer all questions before submitting."
       );
@@ -198,8 +207,10 @@ export default function QuizModal({
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [onClose]);
 
-  const { language } = useLanguage();
-  const t = translations[language];
+  const langKey = language.toLowerCase().startsWith("fr") ? "fr" : "en";
+
+  const t = translations[langKey];
+
   const hasSubmitted = !!result;
   let questionCounter = 1;
 
@@ -239,9 +250,79 @@ export default function QuizModal({
 
         {/* Questions */}
         <div className="space-y-10">
-          <h1 className="lg:text-2xl font-semibold">
-            {t.quiz_modal_mcq_title}
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="lg:text-2xl font-semibold">
+              {t.quiz_modal_mcq_title}
+            </h1>
+            {isSubscribed && (
+              <button
+                className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
+                onClick={async () => {
+                  setDownloading(true);
+                  setDownloadError(null); // clear previous error
+                  try {
+                    const res = await authApi.get("/content/gen/pdf/", {
+                      params: { type: "quiz" },
+                    });
+
+                    const { success, pdf_url } = res.data;
+                    if (success && pdf_url) {
+                      window.open(pdf_url, "_blank");
+                    } else {
+                      setDownloadError(
+                        langKey === "fr"
+                          ? "PDF non prêt. Veuillez réessayer."
+                          : "PDF not ready. Please try again."
+                      );
+                    }
+                  } catch (err: unknown) {
+                    if (axios.isAxiosError(err) && err.response) {
+                      const status = err.response.status;
+                      const isFr = langKey === "fr";
+                      if (status === 404) {
+                        setDownloadError(
+                          isFr
+                            ? "Veuillez générer le contenu avant de télécharger un PDF."
+                            : "Please generate content before downloading a PDF."
+                        );
+                      } else if (status === 401) {
+                        setDownloadError(
+                          isFr
+                            ? "Session expirée. Veuillez vous reconnecter."
+                            : "Session expired. Please log in again."
+                        );
+                      } else {
+                        setDownloadError(
+                          isFr
+                            ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                            : "Could not download PDF. Try again later."
+                        );
+                      }
+                    } else {
+                      setDownloadError(
+                        langKey === "fr"
+                          ? "Une erreur inattendue est survenue."
+                          : "An unexpected error occurred."
+                      );
+                    }
+                    console.error("[LessonModal] ❌ PDF Download failed", err);
+                  } finally {
+                    setDownloading(false);
+                  }
+                }}
+                disabled={downloading}
+              >
+                <FiDownload />
+                {downloading ? "Downloading..." : t.modal_download}
+              </button>
+            )}
+
+            {downloadError && (
+              <p className="text-sm text-red-600 justify-end mt-2">
+                {downloadError}
+              </p>
+            )}
+          </div>
           {content.quiz.mcqs?.map((q, idx) => (
             <div key={`mcq-${idx}`}>
               <p className="font-medium text-gray-800">
@@ -301,7 +382,7 @@ export default function QuizModal({
 
           <h1 className="lg:text-2xl font-semibold">
             {" "}
-            {t.quiz_modal_tf_title}
+            {t?.quiz_modal_tf_title || "Vrai/Faux"}
           </h1>
           {content.quiz.tf?.map((q, idx) => (
             <div key={`tf-${idx}`}>
@@ -311,7 +392,10 @@ export default function QuizModal({
 
               <MathText content={q.statement} />
               <div className="flex gap-4 flex-wrap mt-3">
-                {["True", "False"].map((label, optionIdx) => {
+                {[
+                  langKey === "fr" ? "Vrai" : "True",
+                  langKey === "fr" ? "Faux" : "False",
+                ].map((label, optionIdx) => {
                   const key = `tf-${idx}` as const;
                   const isSelected = selectedAnswers[key] === optionIdx;
                   const correctAnswer =

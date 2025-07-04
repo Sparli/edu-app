@@ -14,7 +14,6 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
   const t = translations[language];
-  const [isHovered, setIsHovered] = useState(false);
   const { profile } = useProfile();
 
   const [showProfileModal, setShowProfileModal] = useState(false); // NEW
@@ -62,11 +61,7 @@ const Navbar = () => {
 
         {/* Right Side */}
         <div className="flex items-center space-x-6 ">
-          <div
-            className="flex items-center space-x-2"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
+          <div className="flex items-center space-x-2">
             <Image
               src="/images/lang.png"
               alt="Language Icon"
@@ -75,16 +70,8 @@ const Navbar = () => {
               className="cursor-pointer mr-4"
             />
 
-            <span
-              className={`text-black mr-4 cursor-pointer hover:text-cyan-400`}
-            >
-              {isHovered
-                ? language === "en"
-                  ? "Français"
-                  : "English"
-                : language === "en"
-                ? "English"
-                : "Français"}
+            <span className="text-black mr-4">
+              {language === "en" ? "French" : "Anglais"}
             </span>
 
             <ToggleSwitch
@@ -102,7 +89,7 @@ const Navbar = () => {
               <Image
                 src={
                   profile?.profile_image
-                    ? profile.profile_image.replace("http://", "https://")
+                    ? profile.profile_image
                     : "/images/avtar.jpg"
                 }
                 alt="User Avatar"
@@ -127,8 +114,6 @@ const Navbar = () => {
               <h4 className="text-gray-800 font-semibold">
                 {(profile?.first_name || "") + " " + (profile?.last_name || "")}
               </h4>
-
-              <p className="text-gray-500 text-sm">{t.role_student}</p>
             </div>
           </div>
         </div>
@@ -264,7 +249,7 @@ const Navbar = () => {
                 className="cursor-pointer ml-3 mr-2"
               />
               <span className="text-black mr-16">
-                {language === "en" ? "English" : "Français"}
+                {language === "en" ? "French" : "Anglais"}
               </span>
               <ToggleSwitch
                 enabled={language === "en"}

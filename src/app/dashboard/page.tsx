@@ -13,17 +13,33 @@ export default function DashboardPage() {
   const { language } = useLanguage();
   const t = translations[language];
   const { profile } = useProfile();
+
+  let welcomeMessage = "";
+
+  if (language === "en") {
+    welcomeMessage = profile?.first_visit
+      ? `Welcome, ${profile?.first_name}`
+      : `Welcome Back, ${profile?.first_name}`;
+  } else if (language === "fr") {
+    if (profile?.first_visit) {
+      if (profile?.gender === "male") {
+        welcomeMessage = `Bienvenu, ${profile?.first_name}`;
+      } else if (profile?.gender === "female") {
+        welcomeMessage = `Bienvenue, ${profile?.first_name}`;
+      } else {
+        welcomeMessage = `Bienvenue, ${profile?.first_name}`;
+      }
+    } else {
+      welcomeMessage = `Bon retour, ${profile?.first_name}`;
+    }
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-10 mt-2 w-full">
         <div>
           <h1 className="lg:text-3xl text-[20px] font-semibold text-[#000000] flex items-center space-x-2">
-            <span>
-              {t.dashboard_welcome.replace(
-                "{{name}}",
-                profile?.first_name || "..."
-              )}
-            </span>
+            <span>{welcomeMessage}</span>
             <Image src="/images/hand.png" alt="Wave" width={24} height={24} />
           </h1>
           <p className="text-[#4B5563] lg:text-2xl text-base lg:mt-3 font-normal">

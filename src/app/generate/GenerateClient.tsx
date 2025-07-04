@@ -289,57 +289,64 @@ export default function GenerateClient() {
         </div>
         <div className="flex justify-end gap-3 pt-4">
           <div className="h-10 w-20 bg-gray-300 rounded" />
-          <div className="h-10 w-20 bg-gray-300 rounded" />
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex min-h-screen bg-[#ffffff]">
+    <div className="flex h-screen overflow-hidden bg-[#ffffff]">
       <Sidebar />
-      <div className="flex-1">
+
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <hr className="text-[#E5E7EB] mt-2" />
-        <h1 className="lg:text-[33px] text-xl text-[#000000] font-semibold mb-1 mt-6 ml-4 lg:ml-10">
-          {t.generate_page_title}
-        </h1>
-        <p className="text-[#4B5563] text-lg lg:text-2xl ml-4 lg:ml-10">
-          {t.generate_page_subtitle}
-        </p>
-        <p className="text-[#9CA3AF] text-base ml-4 lg:ml-10">
-          {t.generate_page_desc}.
-        </p>
-        <div className="flex flex-col lg:flex-row gap-6 p-4 lg:ml-10">
-          <Generate
-            onGenerate={handleGenerate}
-            initialData={meta || undefined}
-            loading={loading}
-          />
-          <div ref={resultRef}>
-            {loading ? (
-              <GeneratedContentSkeleton />
-            ) : error && meta ? (
-              <GeneratedContent
-                content={{ lesson: {}, quiz: {}, reflection: "" }}
-                meta={{
-                  topic: meta.topic,
-                  subject: meta.subject,
-                  level: meta.level,
-                }}
-                error={error}
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="pr-4 lg:pr-10">
+            <h1 className="lg:text-[33px] text-xl text-[#000000] font-semibold mb-1 mt-6 ml-4 lg:ml-10">
+              {t.generate_page_title}
+            </h1>
+            <p className="text-[#4B5563] text-lg lg:text-2xl ml-4 lg:ml-10">
+              {t.generate_page_subtitle}
+            </p>
+            <p className="text-[#9CA3AF] text-base ml-4 lg:ml-10">
+              {t.generate_page_desc}.
+            </p>
+            <div className="flex flex-col lg:flex-row gap-6 p-4 lg:ml-10">
+              <Generate
+                onGenerate={handleGenerate}
+                initialData={meta || undefined}
+                loading={loading}
               />
-            ) : meta && content ? (
-              <GeneratedContent
-                content={content}
-                meta={{
-                  topic: meta.topic,
-                  subject: meta.subject,
-                  level: meta.level,
-                }}
-                error={null}
-              />
-            ) : null}
+              <div ref={resultRef}>
+                {loading ? (
+                  <GeneratedContentSkeleton />
+                ) : error && meta ? (
+                  <GeneratedContent
+                    content={{ lesson: {}, quiz: {}, reflection: "" }}
+                    meta={{
+                      topic: meta.topic,
+                      subject: meta.subject,
+                      level: meta.level,
+                      language: meta.language,
+                    }}
+                    error={error}
+                  />
+                ) : meta && content ? (
+                  <GeneratedContent
+                    content={content}
+                    meta={{
+                      topic: meta.topic,
+                      subject: meta.subject,
+                      level: meta.level,
+                      language: meta.language,
+                    }}
+                    error={null}
+                  />
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
       </div>

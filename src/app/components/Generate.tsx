@@ -214,9 +214,6 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       ],
     },
   ];
-
-  // Language, Level, and Difficulty options (flat lists)
-  const languageOptions = ["English", "French"];
   const levelOptions = ["Primary", "Secondary"];
 
   return (
@@ -224,8 +221,22 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       {/* Custom Language Dropdown */}
       <LabalDropdown
         label={t.generate_language_label}
-        options={languageOptions}
-        selected={form.language}
+        options={[
+          {
+            label: language === "en" ? "English" : "Anglais",
+            value: "English",
+          },
+          { label: language === "en" ? "French" : "Français", value: "French" },
+        ]}
+        selected={
+          form.language === "English"
+            ? language === "en"
+              ? "English"
+              : "Anglais"
+            : language === "en"
+            ? "French"
+            : "Français"
+        }
         onSelect={(val) => {
           setForm({ ...form, language: val as Language });
 

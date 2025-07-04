@@ -12,6 +12,22 @@ import MathText from "./MathText";
 import { submitReflection } from "../api/reflectionApi";
 import { saveContent } from "../api/saveContentApi";
 
+type Language = "English" | "French";
+
+type MCQQuestion = {
+  type: "mcq";
+  statement: string;
+  options: string[];
+};
+
+type TFQuestion = {
+  type: "tf";
+  statement: string;
+  correct_answer: boolean;
+};
+
+type QuizQuestion = MCQQuestion | TFQuestion;
+
 interface Props {
   content: {
     lesson: Record<string, string | string[]>;
@@ -31,7 +47,9 @@ interface Props {
     topic: string;
     subject: Subject;
     level: Level;
+    language: Language; // ✅ Add this if missing
   };
+
   error?: string | null;
 }
 
@@ -43,12 +61,25 @@ export default function GeneratedContent({ content, meta, error }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("lesson");
   const [reflectionText, setReflectionText] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+
+  // Build unified quiz question list
+  const allQuestions: QuizQuestion[] = [
+    ...(content.quiz.mcqs?.map((q): MCQQuestion => ({ type: "mcq", ...q })) ||
+      []),
+    ...(content.quiz.tf?.map((q): TFQuestion => ({ type: "tf", ...q })) || []),
+  ];
+
+  const totalQuestions = allQuestions.length;
 
   // States for save btn
 
   const [hasSaved, setHasSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { language } = useLanguage();
+  const t = translations[language];
+  const contentLang = translations[meta.language === "French" ? "fr" : "en"];
 
   // Function for save btn
 
@@ -139,9 +170,6 @@ export default function GeneratedContent({ content, meta, error }: Props) {
       setIsSubmitting(false);
     }
   };
-
-  const { language } = useLanguage();
-  const t = translations[language];
 
   // ✅ STEP 2: Create a tab label map from translations
   const tabLabels: Record<TabKey, string> = {
@@ -261,41 +289,82 @@ export default function GeneratedContent({ content, meta, error }: Props) {
           )}
 
           {!error && activeTab === "quiz" && content.quiz && (
-            <div
-              className="space-y-6 cursor-pointer"
-              onClick={() => setShowModal(true)}
-            >
-              {/* MCQ Section Preview (just one) */}
-              {Array.isArray(content.quiz?.mcqs) &&
-                content.quiz.mcqs.length > 0 && (
-                  <div>
-                    <h3 className="lg:text-xl font-semibold text-[#1F2937] mb-2">
-                      {t.quiz_section_mcq}
-                    </h3>
-                    <div className="mb-4">
-                      <p className="text-[#4B5563] font-medium lg:text-lg flex items-start gap-1">
-                        <span>1.</span>
-                        <MathText content={content.quiz.mcqs[0].statement} />
-                      </p>
-                      <ul className="list-disc pl-6 text-base text-[#4B5563]">
-                        {content.quiz.mcqs[0].options.map((opt, optIdx) => (
-                          <li key={optIdx}>
-                            <MathText content={opt} />
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
+            <div className="space-y-6">
+              <h3 className="lg:text-xl font-semibold text-[#1F2937] mb-2">
+                {allQuestions[currentQuestion]?.type === "mcq"
+                  ? contentLang.quiz_section_mcq
+                  : contentLang.quiz_section_tf ?? "True/False"}
+              </h3>
 
-              {/* True/False Section Preview (just one) */}
+              {allQuestions[currentQuestion]?.type === "mcq" && (
+                <div>
+                  <p className="text-[#4B5563] font-medium lg:text-lg flex items-start gap-1">
+                    <span>Q: {currentQuestion + 1}</span>
+                    <MathText
+                      content={allQuestions[currentQuestion].statement}
+                    />
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {allQuestions[currentQuestion].type === "mcq" &&
+                      allQuestions[currentQuestion].options.map(
+                        (opt, optIdx) => {
+                          const selected = false; // no active state for now
+
+                          return (
+                            <button
+                              key={optIdx}
+                              onClick={() => setShowModal(true)}
+                              className={`px-4 py-1.5 rounded-md text-sm transition ${
+                                selected
+                                  ? "bg-cyan-500 text-white"
+                                  : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                              }`}
+                            >
+                              <MathText content={opt} />
+                            </button>
+                          );
+                        }
+                      )}
+                  </div>
+                </div>
+              )}
+
+              {allQuestions[currentQuestion]?.type === "tf" && (
+                <div>
+                  <p className="text-[#4B5563] font-medium lg:text-lg flex items-start gap-1">
+                    <span>Q: {currentQuestion + 1}</span>
+                    <MathText
+                      content={allQuestions[currentQuestion].statement}
+                    />
+                  </p>
+                  <div className="flex gap-4 mt-3">
+                    {[contentLang.true, contentLang.false].map((label) => {
+                      const selected = false;
+
+                      return (
+                        <button
+                          key={label}
+                          onClick={() => setShowModal(true)}
+                          className={`px-4 py-1.5 rounded-md text-sm transition ${
+                            selected
+                              ? "bg-cyan-500 text-white"
+                              : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {!error && activeTab === "reflection" && (
             <>
               <h2 className="text-lg font-medium mb-2 text-[#1F2937]">
-                {t.section_reflection}
+                {contentLang.section_reflection}
               </h2>
 
               {/* Static instruction */}
@@ -306,7 +375,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
               {/* User input area */}
               <textarea
                 className="w-full h-30 p-2 border border-gray-300 bg-[#FFFFFF] rounded-xl outline-none resize-none text-[15px]"
-                placeholder={t.placeholder_reflection}
+                placeholder={contentLang.placeholder_reflection}
                 value={reflectionText}
                 onChange={(e) => {
                   if (e.target.value.length <= 500) {
@@ -323,7 +392,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
                   ref={feedbackRef}
                   className="mt-4 text-green-700 bg-green-100 border border-green-400 rounded-md p-2"
                 >
-                  <strong>{t.label_feedback ?? "Feedback"}:</strong>{" "}
+                  <strong>{contentLang.label_feedback}:</strong>{" "}
                   {reflectionFeedback}
                 </div>
               )}
@@ -375,23 +444,33 @@ export default function GeneratedContent({ content, meta, error }: Props) {
                     ? t.btn_saving ?? "Saving..."
                     : t.btn_save}
                 </button>
-
-                <button
-                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md font-medium cursor-pointer hover:bg-cyan-600 transition"
-                  onClick={() => setActiveTab("quiz")}
-                >
-                  {t.btn_next ?? "Next"}
-                </button>
               </div>
             )}
 
             {activeTab === "quiz" && (
-              <button
-                className="bg-cyan-500 text-white px-4 py-1.5 rounded-md cursor-pointer font-medium hover:bg-cyan-600 transition"
-                onClick={() => setActiveTab("reflection")}
-              >
-                {t.btn_next ?? "Next"}
-              </button>
+              <div className="flex justify-end gap-4 w-full">
+                <button
+                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md cursor-pointer font-medium hover:bg-cyan-600 transition disabled:opacity-50"
+                  onClick={() =>
+                    setCurrentQuestion((prev) => Math.max(0, prev - 1))
+                  }
+                  disabled={!!error || currentQuestion === 0}
+                >
+                  {t.btn_prev ?? "Previous"}
+                </button>
+
+                <button
+                  className="bg-cyan-500 text-white px-4 py-1.5 rounded-md cursor-pointer font-medium hover:bg-cyan-600 transition disabled:opacity-50"
+                  onClick={() =>
+                    setCurrentQuestion((prev) =>
+                      Math.min(prev + 1, totalQuestions - 1)
+                    )
+                  }
+                  disabled={!!error || currentQuestion === totalQuestions - 1}
+                >
+                  {t.btn_next ?? "Next"}
+                </button>
+              </div>
             )}
 
             {activeTab === "reflection" && (
@@ -436,6 +515,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
           topic={meta.topic}
           subject={meta.subject}
           level={meta.level}
+          language={meta.language}
           generatedAt={new Date()} // <-- ADD THIS
           onClose={() => setShowModal(false)}
         />

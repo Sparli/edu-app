@@ -5,12 +5,14 @@ import Sidebar from "@/app/components/Sidebar";
 
 export default function SubscriptionPage() {
   return (
-    <div className="flex min-h-screen bg-[#Ffffff]">
+    <div className="flex h-screen overflow-hidden bg-[#Ffffff]">
       <Sidebar />
-      <div className="flex-1">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar />
         <hr className="text-[#E5E7EB] mt-2" />
-        <PremiumSection />
+        <div className="flex-1 overflow-y-auto px-4">
+          <PremiumSection />
+        </div>
       </div>
     </div>
   );

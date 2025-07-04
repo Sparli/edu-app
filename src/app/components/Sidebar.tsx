@@ -24,20 +24,17 @@ const Sidebar = () => {
     <div className="w-80 bg-[#FAFAFA] p-6 lg:flex hidden flex-col justify-between border-r border-gray-200">
       {/* Top Section */}
       <div>
-        <div className="flex items-center space-x-2 mb-10">
-          <Link href="/dashboard">
-            <div className="relative w-[200px] h-[60px]">
-              <Image
-                src={
-                  language === "fr"
-                    ? "/images/french-logo.png"
-                    : "/images/main.svg"
-                }
-                alt="Logo"
-                fill
-                className="object-contain cursor-pointer"
-              />
-            </div>
+        <div className="flex items-center mb-10 px-4">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <Image
+              src="/images/home.svg" // use the icon you just uploaded
+              alt="Home Icon"
+              width={42}
+              height={42}
+            />
+            <span className="text-cyan-500 text-[40px] font-extrabold">
+              {t.sidebar_home}
+            </span>
           </Link>
         </div>
 

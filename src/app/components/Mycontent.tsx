@@ -10,6 +10,8 @@ import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import LessonModal from "./LessonModal";
 import authApi from "../utils/authApi"; // adjust the path if needed
 import DeleteConfirmModal from "./DeleteConfirmModal";
+import QuizPreviewModal from "./modals/QuizPreviewModal"; // adjust the path if needed
+import ReflectionPreviewModal from "./modals/ReflectionPreviewModal";
 
 type LessonPreview = {
   id: number;
@@ -19,7 +21,9 @@ type LessonPreview = {
   difficulty: string;
   language: string;
   created_at: string;
-  generation_datetime: string; // ✅ NEW field added
+  generation_datetime: string;
+  quiz_id: number | null; // ✅ Required (not optional)
+  reflection_id: number | null;
 };
 
 const subjectGroups = [
@@ -112,6 +116,10 @@ export default function MyContentPage() {
   const [lessonToDelete, setLessonToDelete] = useState<number | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
+  const [selectedReflectionId, setSelectedReflectionId] = useState<
+    number | null
+  >(null);
 
   // Cleat Filter
 
@@ -323,7 +331,7 @@ export default function MyContentPage() {
 
         {isLoading ? (
           <div className="flex justify-center items-center h-[300px] w-full">
-            <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            <div className="animate-spin h-10 w-10 rounded-full border-t-4 border-cyan-500 border-opacity-60" />
           </div>
         ) : lessons.length === 0 ? (
           <div className="flex flex-col items-center justify-center mt-12 text-center text-gray-500">
@@ -346,7 +354,6 @@ export default function MyContentPage() {
             {lessons.map((item, index) => (
               <div
                 key={index}
-                onClick={() => setSelectedLessonId(item.id)}
                 className="relative rounded-2xl overflow-hidden shadow-md bg-[#DAE9FF]"
               >
                 <div className="h-2 w-full bg-gradient-to-r from-[#0463EF] to-[#16EA9E] rounded-t-2xl"></div>
@@ -405,18 +412,21 @@ export default function MyContentPage() {
                       onClick={() => setSelectedLessonId(item.id)}
                       className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
                     >
-                      View
+                      {t.tab_lesson}
                     </button>
-
                     <button
-                      className="bg-red-500 text-white px-4 lg:py-[10px] rounded-xl cursor-pointer py-2 lg:w-1/3 w-full text-lg"
-                      onClick={(e) => {
-                        e.stopPropagation(); // ✅ prevent opening the modal
-                        setLessonToDelete(item.id);
-                        setShowDeleteModal(true);
-                      }}
+                      onClick={() => setSelectedQuizId(item.quiz_id)}
+                      className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
                     >
-                      Delete
+                      {t.tab_quiz}
+                    </button>
+                    <button
+                      onClick={() =>
+                        setSelectedReflectionId(item.reflection_id)
+                      }
+                      className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
+                    >
+                      {t.tab_reflection}
                     </button>
                   </div>
                 </div>
@@ -489,6 +499,20 @@ export default function MyContentPage() {
               setLessonToDelete(null);
             }
           }}
+        />
+      )}
+
+      {selectedQuizId && (
+        <QuizPreviewModal
+          quizId={selectedQuizId}
+          onClose={() => setSelectedQuizId(null)}
+        />
+      )}
+
+      {selectedReflectionId && (
+        <ReflectionPreviewModal
+          reflectionId={selectedReflectionId}
+          onClose={() => setSelectedReflectionId(null)}
         />
       )}
     </div>

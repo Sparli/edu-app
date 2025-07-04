@@ -3,12 +3,12 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "http", // 🛑 must match actual runtime protocol
+        protocol: "https",
         hostname: "edulmmersion.croncore.com",
         pathname: "/media/**",
       },
       {
-        protocol: "https", // ✅ optional, in case you upgrade backend URLs later
+        protocol: "http",
         hostname: "edulmmersion.croncore.com",
         pathname: "/media/**",
       },

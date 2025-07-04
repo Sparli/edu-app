@@ -16,22 +16,25 @@ const PremiumSection = () => {
 
   const features = [
     {
-      icon: "/images/content.svg",
+      icon: "/images/book-1.svg",
       title: t.feature_content_title,
       description: t.feature_content_desc,
       bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
+      iconBg: "bg-[#FF9F58]", // orange
     },
     {
-      icon: "/images/save.svg",
+      icon: "/images/save-1.svg",
       title: t.feature_save_title,
       description: t.feature_save_desc,
       bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
+      iconBg: "bg-[#4ADE80]", // green
     },
     {
-      icon: "/images/access.svg",
+      icon: "/images/infinity.svg",
       title: t.Infinte_learning,
       description: t.Infinte_learning_subtitle,
       bg: "lg:bg-[#F7F9FC] bg-[#AB79FF1A]",
+      iconBg: "bg-[#A78BFA]", // purple
     },
   ];
 
@@ -71,20 +74,30 @@ const PremiumSection = () => {
             key={idx}
             className={`rounded-2xl p-6 ${feature.bg} text-center  `}
           >
-            <div className=" flex  items-center justify-center">
-              <Image
-                src={feature.icon}
-                alt={feature.title}
-                width={250}
-                height={250}
-              />
+            <div className="flex items-center justify-center mb-4">
+              <div
+                className={`w-40 h-40 rounded-full flex items-center justify-center ${feature.iconBg}`}
+              >
+                <Image
+                  src={feature.icon}
+                  alt={feature.title}
+                  width={100}
+                  height={100}
+                  className="object-contain"
+                />
+              </div>
             </div>
+
             <h3 className="font-semibold text-[#1F2937]  lg:text-2xl text-xl">
               {feature.title}
             </h3>
-            <p className="text-[#4B5563] text-lg lg:text-xl  mt-2">
-              {feature.description}
-            </p>
+            <ul className="text-[#4B5563] text-left list-disc pl-5 text-base lg:text-lg mt-4 space-y-2">
+              {Array.isArray(feature.description) ? (
+                feature.description.map((point, i) => <li key={i}>{point}</li>)
+              ) : (
+                <li>{feature.description}</li>
+              )}
+            </ul>
           </div>
         ))}
       </div>

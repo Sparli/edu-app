@@ -148,6 +148,17 @@ export default function QuickGenerate() {
     router.push(`/generate?${queryParams.toString()}`);
   };
 
+  const contentLangOptions = [
+    {
+      label: language === "en" ? "English" : "Anglais",
+      value: "English",
+    },
+    {
+      label: language === "en" ? "French" : "Français",
+      value: "French",
+    },
+  ];
+
   return (
     <div
       ref={quickGenerateRef}
@@ -159,15 +170,14 @@ export default function QuickGenerate() {
 
       <div className="flex flex-col lg:flex-row items-center justify-around content-center gap-10">
         {/* Custom Language Dropdown */}
-        {/* 🌐 Language Dropdown */}
         <CustomDropdown
           label={t.generate_language_label}
-          options={[
-            { label: "English", value: "English" },
-            { label: "Français", value: "French" },
-          ]}
+          options={contentLangOptions}
           selected={
-            form.language ? form.language : t.select_language // 🪄 fallback label: "Sélectionner la langue"
+            form.language
+              ? contentLangOptions.find((opt) => opt.value === form.language)
+                  ?.label || ""
+              : t.select_language
           }
           onSelect={(val) => {
             setForm({ ...form, language: val as Language });

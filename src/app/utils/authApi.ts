@@ -120,4 +120,45 @@ authApi.interceptors.response.use(
   }
 );
 
+export const signOutAllDevices = async () => {
+  const res = await authApi.post("/user-settings/sign-out-all/");
+  return res.data;
+};
+
+export const changePassword = async ({
+  current_password,
+  new_password,
+  refresh_token,
+}: {
+  current_password: string;
+  new_password: string;
+  refresh_token: string;
+}): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await authApi.post("/user-settings/password/update/", {
+      current_password,
+      new_password,
+      refresh_token,
+    });
+
+    return response.data;
+} catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    return {
+      success: false,
+      error:
+        error.response?.data?.error ||
+        "An unknown error occurred while updating password.",
+    };
+  }
+
+  return {
+    success: false,
+    error: "Unexpected error occurred during password update.",
+  };
+}
+
+};
+
+
 export default authApi;
