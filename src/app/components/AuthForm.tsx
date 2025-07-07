@@ -12,6 +12,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
 import LanguageToggle from "./LanguageToggle";
 import Dropdown from "@/app/components/dropdown";
+import { AxiosError } from "axios";
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,6 +29,7 @@ const AuthForm = () => {
   // Validation Errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [apiError, setApiError] = useState("");
+  const [loginApiError, setLoginApiError] = useState("");
 
   // Common
   const [email, setEmail] = useState("");
@@ -93,23 +95,28 @@ const AuthForm = () => {
       gender: selectedGender,
       language: language,
     };
-
     try {
       const res = await authApi.post("/users/register/", payload);
+      console.log("Signup response:", res);
+
       if (res.data.success) {
         localStorage.setItem("pendingEmail", email);
         router.push("/otp");
       } else {
-        setApiError(res.data.error || t.auth_signup_failed);
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.seconds_until_expiry) {
-        alert(
-          `Please wait ${err.response.data.seconds_until_expiry} seconds before retrying.`
+        console.warn("Signup failed:", res.data.error);
+        setApiError(
+          res.data.error || "An unknown error occurred. Please try again."
         );
-      } else {
-        setApiError(t.auth_signup_failed);
       }
+    } catch (err) {
+      const axiosError = err as AxiosError<{ error?: string }>;
+      console.error("Signup exception:", axiosError);
+
+      const message =
+        axiosError.response?.data?.error ||
+        axiosError.message ||
+        "Something went wrong during signup. Please try again.";
+      setApiError(message);
     } finally {
       setIsSigningUp(false);
     }
@@ -134,22 +141,26 @@ const AuthForm = () => {
     setIsLoggingIn(true);
 
     try {
-      const res = await authApi.post("/users/login/", { email, password });
+      const res = await authApi.post("/users/login/", {
+        email,
+        password,
+        language: language,
+      });
 
       if (res.data.success) {
         localStorage.setItem("access", res.data.access);
         localStorage.setItem("refresh", res.data.refresh);
         setShowSplash(true);
       } else {
-        setApiError(res.data.error);
+        setLoginApiError(res.data.error);
         // Backend provides specific messages
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {
-        setApiError(err.response.data.error);
+        setLoginApiError(err.response.data.error);
         // Show backend-provided error
       } else {
-        setApiError(t.auth_login_failed);
+        setLoginApiError(t.auth_login_failed);
       }
     } finally {
       setIsLoggingIn(false);
@@ -276,9 +287,9 @@ const AuthForm = () => {
                     {t.auth_forgot_password}
                   </Link>
                 </div>
-                {apiError && (
+                {loginApiError && (
                   <p className="text-red-500 text-sm text-center mt-4">
-                    {apiError}
+                    {loginApiError}
                   </p>
                 )}
                 <button
@@ -434,6 +445,9 @@ const AuthForm = () => {
                       placeholder={t.auth_select_gender}
                       className="w-full"
                     />
+                    {errors.gender && (
+                      <p className="text-red-500 text-sm">{errors.gender}</p>
+                    )}
                   </div>
 
                   {/* Password fields */}
@@ -480,6 +494,11 @@ const AuthForm = () => {
                       )}
                     </div>
                   </div>
+                  {apiError && (
+                    <p className="text-red-500 text-sm text-center mt-2">
+                      {apiError}
+                    </p>
+                  )}
 
                   {/* Button */}
                   <button

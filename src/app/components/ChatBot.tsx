@@ -399,8 +399,12 @@ const ChatBot = () => {
                   height={32}
                   className="rounded-full mt-1"
                 />
-                <div className="bg-gray-100 px-4 py-2 rounded-xl rounded-bl-none max-w-[270px] text-sm leading-relaxed shadow-inner">
-                  Typing...
+                <div className="bg-gray-100 px-4 py-2 rounded-xl rounded-bl-none max-w-[270px] text-sm leading-relaxed shadow-inner flex items-center gap-1">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+                  </div>
                 </div>
               </div>
             )}
