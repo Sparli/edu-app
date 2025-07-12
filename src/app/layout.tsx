@@ -5,6 +5,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import AuthGate from "./components/AuthGate";
 import { ProfileProvider } from "./context/ProfileContext"; // ✅ Import ProfileProvider
 import "katex/dist/katex.min.css";
+import RouteLoader from "./components/RouteLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable}`}
     >
       <body className="antialiased font-poppins">
+        <RouteLoader />
         <LanguageProvider>
           <ProfileProvider>
             {" "}
