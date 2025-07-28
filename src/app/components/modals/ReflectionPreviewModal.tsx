@@ -8,6 +8,9 @@ import authApi from "@/app/utils/authApi";
 import { FiDownload } from "react-icons/fi";
 import axios from "axios";
 import { useProfile } from "@/app/context/ProfileContext";
+import { useRouter } from "next/navigation";
+import UpgradeModal from "../GlobalPopup/UpgradeModal"; // adjust path if needed
+import ContentSpinner from "@/app/sections/ContentSpinner";
 
 interface Props {
   reflectionId: number;
@@ -38,6 +41,9 @@ export default function ReflectionPreviewModal({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const { profile } = useProfile();
   const isSubscribed = profile?.is_subscribed === true;
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const upgradeRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,7 +65,13 @@ export default function ReflectionPreviewModal({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(target) &&
+        upgradeRef.current &&
+        !upgradeRef.current.contains(target)
+      ) {
         onClose();
       }
     };
@@ -70,11 +82,10 @@ export default function ReflectionPreviewModal({
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-        <div className="bg-white p-6 rounded-xl shadow-lg">Loading...</div>
+        <ContentSpinner />
       </div>
     );
   }
-
   if (!data) return null;
 
   const handleDownload = async () => {
@@ -156,16 +167,20 @@ export default function ReflectionPreviewModal({
         </p>
         <hr className="my-4 text-[#E2E2E2]" />
         <div className="flex justify-end items-center gap-2 mb-6">
-          {isSubscribed && (
-            <button
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-black disabled:opacity-50"
-              disabled={downloading}
-              onClick={handleDownload}
-            >
-              <FiDownload className="text-base" />
-              {downloading ? "Downloading..." : t.quiz_modal.download_pdf}
-            </button>
-          )}
+          <button
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-black disabled:opacity-50"
+            disabled={downloading}
+            onClick={() => {
+              if (!isSubscribed) {
+                setShowUpgradeModal(true);
+                return;
+              }
+              handleDownload();
+            }}
+          >
+            <FiDownload className="text-base" />
+            {downloading ? "Downloading..." : t.quiz_modal.download_pdf}
+          </button>
 
           {/* Error Message */}
           {downloadError && (
@@ -212,6 +227,20 @@ export default function ReflectionPreviewModal({
             </div>
           </>
         )}
+      </div>
+      <div ref={upgradeRef}>
+        <UpgradeModal
+          visible={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            router.push("/subscription");
+          }}
+          title={t.upgrade_title}
+          description={t.upgrade_description}
+          cancelText={t.upgrade_cancel}
+          upgradeText={t.upgrade_button}
+        />
       </div>
     </div>
   );

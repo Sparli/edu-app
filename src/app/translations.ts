@@ -314,7 +314,7 @@ defaultError: "Désolé, une erreur s'est produite. Veuillez réessayer plus tar
       quick_pricing: "Puis-je sauvegarder mon contenu généré ?",
       quick_faq:"Mes données seront-elles supprimées en me déconnectant de tous les appareils ?",
           upgrade_title: "Passez à Premium",
-    upgrade_description: "Passez à l'offre premium pour utiliser la fonction de chatbot.",
+    upgrade_description: "Passez à la version premium pour utiliser cette fonctionnalité.",
     upgrade_cancel: "Annuler",
     upgrade_button: "Mettre à niveau",
 
@@ -840,7 +840,7 @@ btn_prev: "Previous",
       quick_pricing: "Can I save my generated content?",
       quick_faq: "Will my data be deleted on sign out of all devices?",
           upgrade_title: "Go Premium",
-    upgrade_description: "Upgrade to premium to use chatbot facility.",
+    upgrade_description: "Upgrade to premium to use this facility.",
     upgrade_cancel: "Cancel",
     upgrade_button: "Upgrade",
 

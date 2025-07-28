@@ -44,7 +44,13 @@ export default function MathText({ content }: Props) {
         }
 
         // plain text
-        return <span key={idx}>{part}</span>;
+        const formated = part
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-medium">$1</strong>')
+          .replace(/\n/g, "<br />");
+
+        return (
+          <span key={idx} dangerouslySetInnerHTML={{ __html: formated }} />
+        );
       })}
     </>
   );

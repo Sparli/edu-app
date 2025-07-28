@@ -7,6 +7,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import authApi from "../utils/authApi";
 import { useProfile } from "@/app/context/ProfileContext";
 import { useRouter } from "next/navigation";
+import UpgradeModal from "./GlobalPopup/UpgradeModal";
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -457,45 +458,18 @@ const ChatBot = () => {
         </div>
       )}
 
-      {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl shadow-xl lg:max-w-[640px] lg:h-[450.280029296875px] mx-2 lg:mx-0 w-full relative text-center">
-            <div className="relative w-40 sm:w-48 md:w-60 lg:w-72 xl:w-80 h-40 sm:h-48 md:h-60 lg:h-72 xl:h-60 mx-auto ">
-              <Image
-                src="/images/prem.svg"
-                alt="Warning"
-                fill
-                sizes="(max-width: 640px) 160px, (max-width: 768px) 200px, (max-width: 1024px) 288px, (max-width: 1280px) 320px, 100vw"
-                className="object-contain"
-              />
-            </div>
-
-            <h2 className="text-2xl font-normal text-gray-800 mb-2">
-              {t.upgrade_title}
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              {t.upgrade_description}
-            </p>
-            <div className="flex justify-center gap-6">
-              <button
-                onClick={() => setShowUpgradeModal(false)}
-                className="lg:px-22 lg:py-3 px-8 py-2 text-[20px] bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                {t.upgrade_cancel}
-              </button>
-              <button
-                onClick={() => {
-                  setShowUpgradeModal(false); // close modal
-                  router.push("/subscription"); // navigate
-                }}
-                className="lg:px-22 lg:py-3 px-8 py-2 text-[20px] bg-[#04C0F2] text-white rounded-md hover:bg-[#00a5d2]"
-              >
-                {t.upgrade_button}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UpgradeModal
+        visible={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={() => {
+          setShowUpgradeModal(false);
+          router.push("/subscription");
+        }}
+        title={t.upgrade_title}
+        description={t.upgrade_description}
+        cancelText={t.upgrade_cancel}
+        upgradeText={t.upgrade_button}
+      />
     </div>
   );
 };

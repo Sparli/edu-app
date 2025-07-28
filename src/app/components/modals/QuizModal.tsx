@@ -10,19 +10,50 @@ import MathText from "@/app/components/MathText";
 import { saveContent } from "@/app/api/saveContentApi";
 import { FiDownload } from "react-icons/fi";
 import axios from "axios";
+import Image from "next/image";
 import { useProfile } from "@/app/context/ProfileContext";
+import UpgradeModal from "../GlobalPopup/UpgradeModal";
+import { useRouter } from "next/navigation";
+
+function convertStoredToSelected(
+  stored: {
+    mcqs?: Record<string, string>;
+    tf?: Record<string, boolean>;
+  },
+  content: Props["content"]
+): Record<`mcq-${number}` | `tf-${number}`, number | null> {
+  const temp: Record<`mcq-${number}` | `tf-${number}`, number | null> = {};
+
+  if (stored.mcqs && content.quiz.mcqs) {
+    Object.entries(stored.mcqs).forEach(([qIdx, label]) => {
+      const mcqIndex = Number(qIdx) - 1;
+      const optionsObj = content.quiz.mcqs?.[mcqIndex]?.options || [];
+      const optionKeys = Object.keys(optionsObj);
+      const optionIndex = optionKeys.findIndex((key) => key === label);
+      temp[`mcq-${mcqIndex}`] = optionIndex >= 0 ? optionIndex : null;
+    });
+  }
+
+  if (stored.tf) {
+    Object.entries(stored.tf).forEach(([qIdx, val]) => {
+      const tfIndex = Number(qIdx) - 1;
+      temp[`tf-${tfIndex}`] = val === true ? 0 : 1;
+    });
+  }
+
+  return temp;
+}
 
 type Language = "English" | "French";
 
 interface Props {
   content: {
-    lesson: Record<string, string | string[]>;
     quiz: {
       mcqs?: { statement: string; options: string[] }[];
       tf?: { statement: string; correct_answer: boolean }[];
     };
     reflection: string;
-    valid_topic?: string; // <-- ADD THIS
+    valid_topic?: string;
   };
   topic: string;
   subject: Subject;
@@ -31,9 +62,10 @@ interface Props {
   generatedAt: Date;
   onClose: () => void;
 }
+
 type SubmittedAnswers = {
-  mcqs?: number[];
-  tf?: boolean[];
+  mcqs?: Record<string, string>;
+  tf?: Record<string, boolean>;
 };
 
 // ----- Utils -----
@@ -72,20 +104,6 @@ export function clearQuizSubmission() {
   sessionStorage.removeItem("submitted_quiz_data");
 }
 
-function convertStoredToSelected(stored: {
-  mcqs?: number[];
-  tf?: boolean[];
-}): Record<`mcq-${number}` | `tf-${number}`, number | null> {
-  const temp: Record<`mcq-${number}` | `tf-${number}`, number | null> = {};
-  stored.mcqs?.forEach((ans, idx) => {
-    temp[`mcq-${idx}`] = ans;
-  });
-  stored.tf?.forEach((val, idx) => {
-    temp[`tf-${idx}`] = val ? 0 : 1;
-  });
-  return temp;
-}
-
 export default function QuizModal({
   content,
   onClose,
@@ -95,6 +113,8 @@ export default function QuizModal({
   generatedAt,
 }: Props) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const upgradeRef = useRef<HTMLDivElement>(null);
+
   type QuestionKey = `mcq-${number}` | `tf-${number}`;
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<QuestionKey, number | null>
@@ -102,12 +122,14 @@ export default function QuizModal({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<QuizSubmitResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showCorrectness, setShowCorrectness] = useState(false);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const { profile } = useProfile();
   const isSubscribed = profile?.is_subscribed === true;
+  const [reasonVisible, setReasonVisible] = useState<
+    Record<QuestionKey, boolean>
+  >({});
 
   const handleSubmit = async () => {
     if (loading) return;
@@ -131,13 +153,25 @@ export default function QuizModal({
     setLoading(true);
     setError(null);
 
-    const mcqs: number[] = [];
-    const tf: boolean[] = [];
+    const mcqs: Record<string, string> = {};
+    const tf: Record<string, boolean> = {};
 
     Object.entries(selectedAnswers).forEach(([key, value]) => {
       if (value === null) return;
-      if (key.startsWith("mcq-")) mcqs.push(value as number);
-      else if (key.startsWith("tf-")) tf.push(value === 0);
+
+      if (key.startsWith("mcq-")) {
+        const qIdx = key.split("-")[1];
+        const selectedOptionIndex = value as number;
+        const rawOption =
+          content.quiz.mcqs?.[+qIdx]?.options?.[selectedOptionIndex];
+        const optionKey = rawOption?.split("|")[0]; // "b"
+        const questionId = String(Number(qIdx) + 1); // convert "0" ➝ "1"
+        if (optionKey) mcqs[questionId] = optionKey;
+      } else if (key.startsWith("tf-")) {
+        const qIdx = key.split("-")[1];
+        const questionId = String(Number(qIdx) + 1); // shift 0-based to 1-based
+        tf[questionId] = value === 0;
+      }
     });
 
     try {
@@ -148,7 +182,6 @@ export default function QuizModal({
         const quizResult = res.data.response;
         saveQuizSubmission({ mcqs, tf }, quizResult);
         setResult(quizResult);
-        setShowCorrectness(true);
         await saveContent({ rating: null, feedback: null });
         if (typeof window !== "undefined") {
           sessionStorage.setItem("save_flag", "true");
@@ -163,11 +196,14 @@ export default function QuizModal({
       }
     } catch (err) {
       const error = err as AxiosError;
-      setError(
-        error.response?.data
-          ? JSON.stringify(error.response.data)
-          : "Something went wrong"
-      );
+      setError(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = error.response?.data as any;
+        if (!data) return "Something went wrong";
+        if (typeof data === "string") return data;
+        if (typeof data.error === "string") return data.error;
+        return "An unknown error occurred.";
+      });
     } finally {
       setLoading(false);
     }
@@ -178,15 +214,14 @@ export default function QuizModal({
     try {
       const stored = loadQuizSubmission();
       if (stored?.submitted) {
-        setSelectedAnswers(convertStoredToSelected(stored.answers));
-
+        const selected = convertStoredToSelected(stored.answers, content);
+        setSelectedAnswers(selected);
         setResult(stored.result);
-        setShowCorrectness(false);
       }
     } catch {
       clearQuizSubmission();
     }
-  }, []);
+  }, [content]); // only runs again if `content` changes
 
   // Prevent scroll on open
   useEffect(() => {
@@ -199,10 +234,17 @@ export default function QuizModal({
   // Close on outside click
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(target) &&
+        upgradeRef.current &&
+        !upgradeRef.current.contains(target)
+      ) {
         onClose();
       }
     };
+
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [onClose]);
@@ -212,6 +254,11 @@ export default function QuizModal({
   const t = translations[langKey];
 
   const hasSubmitted = !!result;
+  const mcqDetails = result?.details?.mcqs ?? [];
+  const tfDetails = result?.details?.true_false ?? [];
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const router = useRouter();
+
   let questionCounter = 1;
 
   return (
@@ -254,68 +301,72 @@ export default function QuizModal({
             <h1 className="lg:text-2xl font-semibold">
               {t.quiz_modal_mcq_title}
             </h1>
-            {isSubscribed && (
-              <button
-                className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
-                onClick={async () => {
-                  setDownloading(true);
-                  setDownloadError(null); // clear previous error
-                  try {
-                    const res = await authApi.get("/content/gen/pdf/", {
-                      params: { type: "quiz" },
-                    });
+            <button
+              className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
+              onClick={async () => {
+                if (!isSubscribed) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
 
-                    const { success, pdf_url } = res.data;
-                    if (success && pdf_url) {
-                      window.open(pdf_url, "_blank");
-                    } else {
-                      setDownloadError(
-                        langKey === "fr"
-                          ? "PDF non prêt. Veuillez réessayer."
-                          : "PDF not ready. Please try again."
-                      );
-                    }
-                  } catch (err: unknown) {
-                    if (axios.isAxiosError(err) && err.response) {
-                      const status = err.response.status;
-                      const isFr = langKey === "fr";
-                      if (status === 404) {
-                        setDownloadError(
-                          isFr
-                            ? "Veuillez générer le contenu avant de télécharger un PDF."
-                            : "Please generate content before downloading a PDF."
-                        );
-                      } else if (status === 401) {
-                        setDownloadError(
-                          isFr
-                            ? "Session expirée. Veuillez vous reconnecter."
-                            : "Session expired. Please log in again."
-                        );
-                      } else {
-                        setDownloadError(
-                          isFr
-                            ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
-                            : "Could not download PDF. Try again later."
-                        );
-                      }
-                    } else {
-                      setDownloadError(
-                        langKey === "fr"
-                          ? "Une erreur inattendue est survenue."
-                          : "An unexpected error occurred."
-                      );
-                    }
-                    console.error("[LessonModal] ❌ PDF Download failed", err);
-                  } finally {
-                    setDownloading(false);
+                setDownloading(true);
+                setDownloadError(null); // clear previous error
+
+                try {
+                  const res = await authApi.get("/content/gen/pdf/", {
+                    params: { type: "quiz" },
+                  });
+
+                  const { success, pdf_url } = res.data;
+                  if (success && pdf_url) {
+                    window.open(pdf_url, "_blank");
+                  } else {
+                    setDownloadError(
+                      langKey === "fr"
+                        ? "PDF non prêt. Veuillez réessayer."
+                        : "PDF not ready. Please try again."
+                    );
                   }
-                }}
-                disabled={downloading}
-              >
-                <FiDownload />
-                {downloading ? "Downloading..." : t.modal_download}
-              </button>
-            )}
+                } catch (err: unknown) {
+                  if (axios.isAxiosError(err) && err.response) {
+                    const status = err.response.status;
+                    const isFr = langKey === "fr";
+                    if (status === 404) {
+                      setDownloadError(
+                        isFr
+                          ? "Veuillez générer le contenu avant de télécharger un PDF."
+                          : "Please generate content before downloading a PDF."
+                      );
+                    } else if (status === 401) {
+                      setDownloadError(
+                        isFr
+                          ? "Session expirée. Veuillez vous reconnecter."
+                          : "Session expired. Please log in again."
+                      );
+                    } else {
+                      setDownloadError(
+                        isFr
+                          ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                          : "Could not download PDF. Try again later."
+                      );
+                    }
+                  } else {
+                    setDownloadError(
+                      langKey === "fr"
+                        ? "Une erreur inattendue est survenue."
+                        : "An unexpected error occurred."
+                    );
+                  }
+                  console.error("[LessonModal] ❌ PDF Download failed", err);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              disabled={downloading}
+            >
+              <FiDownload />
+              {downloading ? "Downloading..." : t.modal_download}
+            </button>
 
             {downloadError && (
               <p className="text-sm text-red-600 justify-end mt-2">
@@ -323,129 +374,290 @@ export default function QuizModal({
               </p>
             )}
           </div>
-          {content.quiz.mcqs?.map((q, idx) => (
-            <div key={`mcq-${idx}`}>
-              <p className="font-medium text-gray-800">
-                Q: {questionCounter++}
-              </p>
+          {content.quiz.mcqs?.map((q, idx) => {
+            const mcqResult = (
+              mcqDetails as Record<
+                string,
+                {
+                  correct: boolean;
+                  user_answer: string;
+                  correct_answer: string;
+                  rationale?: string;
+                }
+              >
+            )?.[String(idx + 1)];
+            const correctAnswerLabel = mcqResult?.correct_answer;
+            const userAnswerLabel = mcqResult?.user_answer;
+            const correctAnswerIndex =
+              content.quiz.mcqs?.[idx]?.options?.findIndex((opt) => {
+                if (!opt || !correctAnswerLabel) return false;
+                const optionKey = opt.includes("|") ? opt.split("|")[0] : opt;
+                return (
+                  optionKey === correctAnswerLabel || opt === correctAnswerLabel
+                );
+              }) ?? -1;
+            // Find index of user-selected answer
+            const userAnswerIndex =
+              userAnswerLabel && q.options
+                ? q.options.findIndex((opt) => {
+                    const optionKey = opt.includes("|")
+                      ? opt.split("|")[0]
+                      : opt;
+                    return (
+                      optionKey === userAnswerLabel || opt === userAnswerLabel
+                    );
+                  })
+                : -1;
 
-              <p className="mb-2 text-gray-700 lg:text-lg">
-                <MathText content={q.statement} />
-              </p>
-              <div className="flex gap-4 flex-wrap">
-                {q.options.map((opt, i) => {
-                  const key = `mcq-${idx}` as const;
-                  const isSelected = selectedAnswers[key] === i;
-                  const correctAnswer =
-                    result?.details.mcqs?.[idx]?.correct_answer;
+            return (
+              <div key={`mcq-${idx}`}>
+                <p className="font-medium text-gray-800">
+                  Q: {questionCounter++}
+                </p>
+                <p className="mb-2 text-gray-700 lg:text-lg">
+                  <MathText content={q.statement} />
+                </p>
+                <div className="flex gap-4 flex-wrap">
+                  {q.options.map((opt, i) => {
+                    const key = `mcq-${idx}` as const;
+                    const isSelected =
+                      selectedAnswers[key] === i || // Pre-submission selection
+                      (hasSubmitted && userAnswerIndex === i); // Post-submission selection
+                    // Updated for intended behavior: blue for "Show Selected Options" (pre/post), green/red for "Show Results"
+                    const showBlue =
+                      isSelected && (!hasSubmitted || showSelectedOnly); // Blue for selected before/after submission under "Show Selected Options"
+                    const showGreen =
+                      hasSubmitted &&
+                      !showSelectedOnly &&
+                      i === correctAnswerIndex; // Green for correct in "Show Results"
+                    const showRed =
+                      hasSubmitted &&
+                      !showSelectedOnly &&
+                      isSelected &&
+                      i !== correctAnswerIndex; // Red for wrong in "Show Results"
 
-                  const showBlue =
-                    (showSelectedOnly || !showCorrectness) && isSelected;
+                    return (
+                      <button
+                        key={i}
+                        className={`
+                  px-5 py-1.5 rounded-md transition cursor-pointer
+                  ${
+                    showBlue
+                      ? "bg-cyan-500 text-white"
+                      : showGreen
+                      ? "bg-green-500 text-white"
+                      : showRed
+                      ? "bg-red-500 text-white"
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  }`}
+                        disabled={hasSubmitted}
+                        onClick={() => {
+                          if (!hasSubmitted) {
+                            setSelectedAnswers((prev) => ({
+                              ...prev,
+                              [key]: i,
+                            }));
+                            setError(null);
+                          }
+                        }}
+                      >
+                        <MathText
+                          content={
+                            opt?.includes("|") ? opt.split("|")[1] : opt || ""
+                          }
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+                {hasSubmitted &&
+                  !showSelectedOnly &&
+                  "rationale" in mcqResult && (
+                    <>
+                      <button
+                        onClick={() => {
+                          if (!isSubscribed) {
+                            setShowUpgradeModal(true);
+                            return;
+                          }
+                          setReasonVisible((prev) => ({
+                            ...prev,
+                            [`mcq-${idx}`]: !prev[`mcq-${idx}`],
+                          }));
+                        }}
+                        className="mt-3 flex items-center text-base text-cyan-600 hover:underline italic gap-2"
+                      >
+                        <Image
+                          src="/images/hint.svg"
+                          alt="Info"
+                          width={20}
+                          height={20}
+                          className="rounded-full border border-cyan-600 hover:border-cyan-700 transition-all duration-200 "
+                        />
+                        {langKey === "fr" ? "Indice" : "Hint"}
+                      </button>
 
-                  const showGreen =
-                    !showSelectedOnly && showCorrectness && i === correctAnswer;
-                  const showRed =
-                    !showSelectedOnly &&
-                    showCorrectness &&
-                    isSelected &&
-                    i !== correctAnswer;
-
-                  return (
-                    <button
-                      key={i}
-                      className={`
-        px-5 py-1.5 rounded-md transition cursor-pointer
-        ${
-          showBlue
-            ? "bg-cyan-500 text-white"
-            : showGreen
-            ? "bg-green-500 text-white"
-            : showRed
-            ? "bg-red-500 text-white"
-            : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-        }`}
-                      disabled={hasSubmitted}
-                      onClick={() => {
-                        if (!hasSubmitted) {
-                          setSelectedAnswers((prev) => ({ ...prev, [key]: i }));
-                          setError(null);
-                        }
-                      }}
-                    >
-                      <MathText content={opt} />
-                    </button>
-                  );
-                })}
+                      {isSubscribed &&
+                        reasonVisible[`mcq-${idx}`] &&
+                        mcqResult?.rationale && (
+                          <div
+                            className={`mt-3 p-4 rounded-md text-sm ${
+                              mcqResult.correct
+                                ? "text-green-700 bg-green-100 border border-green-400"
+                                : "text-red-700 bg-red-100 border border-red-400"
+                            }`}
+                          >
+                            {mcqResult.rationale}
+                          </div>
+                        )}
+                    </>
+                  )}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <h1 className="lg:text-2xl font-semibold">
             {" "}
             {t?.quiz_modal_tf_title || "Vrai/Faux"}
           </h1>
-          {content.quiz.tf?.map((q, idx) => (
-            <div key={`tf-${idx}`}>
-              <p className="font-medium text-gray-800">
-                Q: {questionCounter++}
-              </p>
+          {content.quiz.tf?.map((q, idx) => {
+            const tfResult =
+              (
+                tfDetails as Record<
+                  string,
+                  {
+                    correct: boolean;
+                    user_answer: boolean;
+                    correct_answer: boolean;
+                    rationale?: string;
+                  }
+                >
+              )?.[String(idx + 1)] ||
+              (
+                tfDetails as Record<
+                  number,
+                  {
+                    correct: boolean;
+                    user_answer: boolean;
+                    correct_answer: boolean;
+                  }
+                >
+              )?.[idx + 1]; // Type-safe fallback for 0-based indexing
+            const correctAnswer = tfResult?.correct_answer;
+            const userAnswer = tfResult?.user_answer;
 
-              <MathText content={q.statement} />
-              <div className="flex gap-4 flex-wrap mt-3">
-                {[
-                  langKey === "fr" ? "Vrai" : "True",
-                  langKey === "fr" ? "Faux" : "False",
-                ].map((label, optionIdx) => {
-                  const key = `tf-${idx}` as const;
-                  const isSelected = selectedAnswers[key] === optionIdx;
-                  const correctAnswer =
-                    result?.details.tf?.[idx]?.correct_answer;
-                  const isOptionTrue = optionIdx === 0;
+            return (
+              <div key={`tf-${idx}`}>
+                <p className="font-medium text-gray-800">
+                  Q: {questionCounter++}
+                </p>
+                <MathText content={q.statement} />
+                <div className="flex gap-4 flex-wrap mt-3">
+                  {[
+                    langKey === "fr" ? "Vrai" : "True",
+                    langKey === "fr" ? "Faux" : "False",
+                  ].map((label, optionIdx) => {
+                    const key = `tf-${idx}` as const;
+                    let isSelected = false;
+                    if (!hasSubmitted) {
+                      isSelected = selectedAnswers[key] === optionIdx;
+                    } else if (hasSubmitted && showSelectedOnly) {
+                      isSelected = selectedAnswers[key] === optionIdx;
+                    } else if (hasSubmitted && !showSelectedOnly) {
+                      isSelected =
+                        (optionIdx === 0 && userAnswer === true) ||
+                        (optionIdx === 1 && userAnswer === false);
+                    }
+                    const isOptionTrue = optionIdx === 0;
+                    // Updated for intended behavior: blue for "Show Selected Options" (pre/post), green/red for "Show Results"
+                    const showBlue =
+                      isSelected &&
+                      (!hasSubmitted || (hasSubmitted && showSelectedOnly)); // Blue for selected before/after under "Show Selected Options"
+                    const showGreen =
+                      hasSubmitted &&
+                      !showSelectedOnly &&
+                      isOptionTrue === correctAnswer;
 
-                  const showGreen =
-                    !showSelectedOnly &&
-                    showCorrectness &&
-                    isOptionTrue === correctAnswer;
-                  const showRed =
-                    !showSelectedOnly &&
-                    showCorrectness &&
-                    isSelected &&
-                    !showGreen;
-                  const showBlue =
-                    (showSelectedOnly || !showCorrectness) && isSelected;
-
-                  return (
-                    <button
-                      key={label}
-                      className={`
-        px-5 py-1.5 rounded-md transition cursor-pointer
-        ${
-          showBlue
-            ? "bg-cyan-500 text-white"
-            : showGreen
-            ? "bg-green-500 text-white"
-            : showRed
-            ? "bg-red-500 text-white"
-            : "bg-gray-300 text-gray-800 hover:bg-gray-400"
-        }`}
-                      disabled={hasSubmitted}
-                      onClick={() => {
-                        if (!hasSubmitted) {
-                          setSelectedAnswers((prev) => ({
+                    const showRed =
+                      hasSubmitted &&
+                      !showSelectedOnly &&
+                      isSelected &&
+                      isOptionTrue !== correctAnswer; // Red for wrong in "Show Results"// Red for wrong in "Show Results" // Red for wrong in "Show Results"
+                    return (
+                      <button
+                        key={label}
+                        className={`
+                  px-5 py-1.5 rounded-md transition cursor-pointer
+                  ${
+                    showBlue
+                      ? "bg-cyan-500 text-white"
+                      : showGreen
+                      ? "bg-green-500 text-white"
+                      : showRed
+                      ? "bg-red-500 text-white"
+                      : "bg-gray-300 text-gray-800 hover:bg-gray-400"
+                  }`}
+                        disabled={hasSubmitted}
+                        onClick={() => {
+                          if (!hasSubmitted) {
+                            setSelectedAnswers((prev) => ({
+                              ...prev,
+                              [key]: optionIdx,
+                            }));
+                            setError(null);
+                          }
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {hasSubmitted &&
+                  !showSelectedOnly &&
+                  "rationale" in tfResult && (
+                    <>
+                      <button
+                        onClick={() => {
+                          if (!isSubscribed) {
+                            setShowUpgradeModal(true);
+                            return;
+                          }
+                          setReasonVisible((prev) => ({
                             ...prev,
-                            [key]: optionIdx,
+                            [`tf-${idx}`]: !prev[`tf-${idx}`],
                           }));
-                          setError(null);
-                        }
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+                        }}
+                        className="mt-3 flex items-center text-base text-cyan-600 hover:underline italic gap-1"
+                      >
+                        <Image
+                          src="/images/hint.svg"
+                          alt="Info"
+                          width={20}
+                          height={20}
+                          className="rounded-full border border-cyan-600 hover:border-cyan-700 transition-all duration-200 "
+                        />
+                        {langKey === "fr" ? "Indice" : "Hint"}
+                      </button>
+
+                      {isSubscribed &&
+                        reasonVisible[`tf-${idx}`] &&
+                        tfResult.rationale && (
+                          <div
+                            className={`mt-3 p-4 rounded-md text-sm ${
+                              tfResult.correct
+                                ? "text-green-700 bg-green-100 border border-green-400"
+                                : "text-red-700 bg-red-100 border border-red-400"
+                            }`}
+                          >
+                            {tfResult.rationale}
+                          </div>
+                        )}
+                    </>
+                  )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Submit / Score */}
@@ -455,8 +667,8 @@ export default function QuizModal({
             {result && (
               <div className="text-sm text-green-700 font-medium">
                 {t.quiz_modal_score_label}:{" "}
-                {result.score.mcqs + result.score.tf}/
-                {result.total.mcqs + result.total.tf}
+                {result.score.mcqs + result.score.true_false}/
+                {result.total.mcqs + result.total.true_false}
               </div>
             )}
             {error && (
@@ -490,6 +702,20 @@ export default function QuizModal({
             </button>
           </div>
         </div>
+      </div>
+      <div ref={upgradeRef}>
+        <UpgradeModal
+          visible={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            router.push("/subscription");
+          }}
+          title={t.upgrade_title}
+          description={t.upgrade_description}
+          cancelText={t.upgrade_cancel}
+          upgradeText={t.upgrade_button}
+        />
       </div>
     </div>
   );

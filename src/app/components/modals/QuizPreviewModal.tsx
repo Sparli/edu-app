@@ -9,6 +9,10 @@ import MathText from "@/app/components/MathText";
 import { FiDownload } from "react-icons/fi";
 import axios from "axios";
 import { useProfile } from "@/app/context/ProfileContext";
+import ContentSpinner from "@/app/sections/ContentSpinner";
+import Image from "next/image"; // Ensure you have this import for Image component
+import UpgradeModal from "../GlobalPopup/UpgradeModal"; // adjust path if needed
+import { useRouter } from "next/navigation";
 
 interface Props {
   quizId: number;
@@ -21,22 +25,40 @@ type QuizDetailResponse = {
   level: string;
   generation_datetime: string;
   quiz: {
-    mcqs: {
-      statement: string;
-      options: string[];
-      correct_answer: number;
-      user_answer: number | null;
-    }[];
-    tf: {
-      statement: string;
-      correct_answer: boolean;
-      user_answer: boolean | null;
-    }[];
+    mcqs: Record<
+      string,
+      {
+        statement: string;
+        options: Record<string, string>;
+        answer: string; // correct option id
+        user_answer?: string | null;
+        rationale?: string; // optional rationale for the answer
+      }
+    >;
+    true_false: Record<
+      string,
+      {
+        statement: string;
+        answer: boolean;
+        user_answer?: boolean | null;
+        rationale?: string; // optional rationale for the answer
+      }
+    >;
   };
   submitted: boolean;
   result: {
-    score: { mcqs: number; tf: number };
-    total: { mcqs: number; tf: number };
+    score: { mcqs: number; true_false: number };
+    total: { mcqs: number; true_false: number };
+    details: {
+      mcqs: Record<
+        string,
+        { correct: boolean; user_answer: string; correct_answer: string }
+      >;
+      true_false: Record<
+        string,
+        { correct: boolean; user_answer: boolean; correct_answer: boolean }
+      >;
+    };
   };
 };
 
@@ -46,6 +68,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const upgradeRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const { language } = useLanguage();
@@ -53,6 +76,11 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
   const qm = t.quiz_modal;
   const { profile } = useProfile();
   const isSubscribed = profile?.is_subscribed === true;
+  const [reasonVisible, setReasonVisible] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     type MCQDetail = {
@@ -82,22 +110,28 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
 
           // Inject user_answer into quiz.mcqs
           if (response.submitted && response.result?.details) {
-            const mcqDetails = response.result.details.mcqs || [];
-            const tfDetails = response.result.details.tf || [];
+            // This replaces the old array index loop
+            response.quiz.mcqs = Object.entries(
+              response.quiz.mcqs || {}
+            ).reduce((acc, [key, q]) => {
+              const userDetail = response.result.details?.mcqs?.[key];
+              acc[key] = {
+                ...q,
+                user_answer: userDetail?.user_answer ?? null,
+              };
+              return acc;
+            }, {} as typeof response.quiz.mcqs);
 
-            response.quiz.mcqs = response.quiz.mcqs.map((q, idx): typeof q => {
-              const detail = mcqDetails.find((d: MCQDetail) => d.index === idx);
-              return detail
-                ? { ...q, user_answer: detail.user_answer }
-                : { ...q, user_answer: null };
-            });
-
-            response.quiz.tf = response.quiz.tf.map((q, idx): typeof q => {
-              const detail = tfDetails.find((d: TFDetail) => d.index === idx);
-              return detail
-                ? { ...q, user_answer: detail.user_answer }
-                : { ...q, user_answer: null };
-            });
+            response.quiz.true_false = Object.entries(
+              response.quiz.true_false || {}
+            ).reduce((acc, [key, q]) => {
+              const userDetail = response.result.details?.true_false?.[key];
+              acc[key] = {
+                ...q,
+                user_answer: userDetail?.user_answer ?? null,
+              };
+              return acc;
+            }, {} as typeof response.quiz.true_false);
           }
 
           setData(response);
@@ -119,7 +153,13 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
   // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(target) &&
+        upgradeRef.current &&
+        !upgradeRef.current.contains(target)
+      ) {
         onClose();
       }
     };
@@ -130,7 +170,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-        <div className="bg-white p-6 rounded-xl shadow-lg">Loading...</div>
+        <ContentSpinner />
       </div>
     );
   }
@@ -170,74 +210,78 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
         <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">{qm.mcqs_heading}</h2>
-            {isSubscribed && (
-              <button
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-black disabled:opacity-50"
-                disabled={downloading}
-                onClick={async () => {
-                  setDownloading(true);
-                  setDownloadError(null);
-                  try {
-                    const res = await authApi.get("/history/download-pdf/", {
-                      params: { type: "quiz", id: quizId },
-                    });
 
-                    const { success, pdf_url } = res.data;
-                    if (success && pdf_url) {
-                      window.open(pdf_url, "_blank");
+            <button
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-black disabled:opacity-50"
+              disabled={downloading}
+              onClick={async () => {
+                if (!isSubscribed) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+
+                setDownloading(true);
+                setDownloadError(null);
+                try {
+                  const res = await authApi.get("/history/download-pdf/", {
+                    params: { type: "quiz", id: quizId },
+                  });
+                  const { success, pdf_url } = res.data;
+                  if (success && pdf_url) {
+                    window.open(pdf_url, "_blank");
+                  } else {
+                    setDownloadError(
+                      language === "fr"
+                        ? "Le PDF n'est pas encore prêt. Réessayez bientôt."
+                        : "PDF not ready yet. Please try again."
+                    );
+                  }
+                } catch (err: unknown) {
+                  if (axios.isAxiosError(err) && err.response) {
+                    const status = err.response.status;
+                    if (status === 404) {
+                      setDownloadError(
+                        language === "fr"
+                          ? "Contenu introuvable."
+                          : "Couldn’t find that content."
+                      );
+                    } else if (status === 500) {
+                      setDownloadError(
+                        language === "fr"
+                          ? "Erreur serveur lors de la génération du PDF."
+                          : "Server error generating PDF."
+                      );
+                    } else if (status === 401) {
+                      setDownloadError(
+                        language === "fr"
+                          ? "Session expirée. Veuillez vous reconnecter."
+                          : "Session expired. Please log in again."
+                      );
                     } else {
                       setDownloadError(
                         language === "fr"
-                          ? "Le PDF n'est pas encore prêt. Réessayez bientôt."
-                          : "PDF not ready yet. Please try again."
+                          ? "Impossible de télécharger le PDF."
+                          : "Could not download PDF."
                       );
                     }
-                  } catch (err: unknown) {
-                    if (axios.isAxiosError(err) && err.response) {
-                      const status = err.response.status;
-                      if (status === 404) {
-                        setDownloadError(
-                          language === "fr"
-                            ? "Contenu introuvable."
-                            : "Couldn’t find that content."
-                        );
-                      } else if (status === 500) {
-                        setDownloadError(
-                          language === "fr"
-                            ? "Erreur serveur lors de la génération du PDF."
-                            : "Server error generating PDF."
-                        );
-                      } else if (status === 401) {
-                        setDownloadError(
-                          language === "fr"
-                            ? "Session expirée. Veuillez vous reconnecter."
-                            : "Session expired. Please log in again."
-                        );
-                      } else {
-                        setDownloadError(
-                          language === "fr"
-                            ? "Impossible de télécharger le PDF."
-                            : "Could not download PDF."
-                        );
-                      }
-                    } else {
-                      setDownloadError("An unexpected error occurred.");
-                    }
-                    console.error(
-                      "[QuizPreviewModal] ❌ PDF Download failed",
-                      err
-                    );
-                  } finally {
-                    setDownloading(false);
+                  } else {
+                    setDownloadError("An unexpected error occurred.");
                   }
-                }}
-              >
-                <FiDownload className="text-base" />
-                {downloading
-                  ? "Downloading..."
-                  : t.modal_download || "Download PDF"}
-              </button>
-            )}
+                  console.error(
+                    "[QuizPreviewModal] ❌ PDF Download failed",
+                    err
+                  );
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+            >
+              <FiDownload className="text-base" />
+              {downloading
+                ? "Downloading..."
+                : t.modal_download || "Download PDF"}
+            </button>
+
             {downloadError && (
               <p className="text-sm text-red-600 mt-1 text-right">
                 {downloadError}
@@ -245,16 +289,16 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
             )}
           </div>
 
-          {data.quiz?.mcqs?.map((q, idx) => (
-            <div key={idx} className="mb-6">
+          {Object.entries(data.quiz?.mcqs || {}).map(([key, q], idx) => (
+            <div key={key} className="mb-6">
               <p className="font-medium text-gray-800 mb-2">
                 Q{idx + 1}: <MathText content={q.statement} />
               </p>
 
               <div className="flex flex-wrap gap-3">
-                {q.options.map((opt, optIdx) => {
-                  const isCorrect = optIdx === q.correct_answer;
-                  const isSelected = optIdx === q.user_answer;
+                {Object.entries(q.options).map(([label, text]) => {
+                  const isCorrect = label === q.answer;
+                  const isSelected = label === q.user_answer;
                   const isWrong = isSelected && !isCorrect;
 
                   const showGreen = !showSelectedOnly && isCorrect;
@@ -263,19 +307,63 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
 
                   return (
                     <button
-                      key={optIdx}
+                      key={label}
                       className={`px-4 py-1.5 rounded-md text-sm transition
-  ${showGreen ? "bg-green-500 text-white" : ""}
-  ${showRed ? "bg-red-500 text-white" : ""}
-  ${showBlue ? "bg-cyan-500 text-white" : ""}
-  ${!showGreen && !showRed && !showBlue ? "bg-gray-200 text-gray-800" : ""}
-`}
+              ${showGreen ? "bg-green-500 text-white" : ""}
+              ${showRed ? "bg-red-500 text-white" : ""}
+              ${showBlue ? "bg-cyan-500 text-white" : ""}
+              ${
+                !showGreen && !showRed && !showBlue
+                  ? "bg-gray-200 text-gray-800"
+                  : ""
+              }
+            `}
                     >
-                      <MathText content={opt} />
+                      <MathText content={text} />
                     </button>
                   );
                 })}
               </div>
+              <>
+                {/* Hint Button (always shown if rationale exists) */}
+                {"rationale" in q && (
+                  <button
+                    onClick={() => {
+                      if (!isSubscribed) {
+                        setShowUpgradeModal(true); // Trigger upgrade popup
+                        return;
+                      }
+                      setReasonVisible((prev) => ({
+                        ...prev,
+                        [key]: !prev[key],
+                      }));
+                    }}
+                    className="mt-3 flex items-center text-sm text-cyan-600 hover:underline italic gap-2"
+                  >
+                    <Image
+                      src="/images/hint.svg"
+                      alt="Info"
+                      width={20}
+                      height={20}
+                      className="rounded-full border border-cyan-600 hover:border-cyan-700 transition-all duration-200 "
+                    />
+                    {language === "fr" ? "Indice" : "Hint"}
+                  </button>
+                )}
+
+                {/* Rationale shown only for subscribed users */}
+                {isSubscribed && reasonVisible[key] && q.rationale && (
+                  <div
+                    className={`mt-3 p-4 rounded-md text-sm ${
+                      q.user_answer === q.answer
+                        ? "text-green-700 bg-green-100 border border-green-400"
+                        : "text-red-700 bg-red-100 border border-red-400"
+                    }`}
+                  >
+                    {q.rationale}
+                  </div>
+                )}
+              </>
             </div>
           ))}
         </div>
@@ -283,12 +371,13 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
         {/* TF */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold mb-4">True / False</h2>
-          {data.quiz?.tf?.map((q, idx) => {
+          {Object.entries(data.quiz?.true_false || {}).map(([key, q], idx) => {
             const userAnswer = q.user_answer;
-            const correct = q.correct_answer;
-            const totalMcqs = data.quiz?.mcqs?.length ?? 0;
+            const correctAnswer = q.answer;
+            const totalMcqs = Object.keys(data.quiz?.mcqs || {}).length;
+
             return (
-              <div key={idx} className="mb-6">
+              <div key={key} className="mb-6">
                 <p className="font-medium text-gray-800 mb-2">
                   Q{totalMcqs + idx + 1}: <MathText content={q.statement} />
                 </p>
@@ -296,7 +385,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
                 <div className="flex gap-3">
                   {["True", "False"].map((label, optIdx) => {
                     const isTrue = optIdx === 0;
-                    const isCorrect = isTrue === correct;
+                    const isCorrect = isTrue === correctAnswer;
                     const isSelected = isTrue === userAnswer;
                     const isWrong = isSelected && !isCorrect;
 
@@ -308,17 +397,59 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
                       <button
                         key={label}
                         className={`px-4 py-1.5 rounded-md text-sm transition
-  ${showGreen ? "bg-green-500 text-white" : ""}
-  ${showRed ? "bg-red-500 text-white" : ""}
-  ${showBlue ? "bg-cyan-500 text-white" : ""}
-  ${!showGreen && !showRed && !showBlue ? "bg-gray-200 text-gray-800" : ""}
-`}
+                ${showGreen ? "bg-green-500 text-white" : ""}
+                ${showRed ? "bg-red-500 text-white" : ""}
+                ${showBlue ? "bg-cyan-500 text-white" : ""}
+                ${
+                  !showGreen && !showRed && !showBlue
+                    ? "bg-gray-200 text-gray-800"
+                    : ""
+                }
+              `}
                       >
                         {label}
                       </button>
                     );
                   })}
                 </div>
+                {!showSelectedOnly && data.submitted && "rationale" in q && (
+                  <>
+                    <button
+                      onClick={() => {
+                        if (!isSubscribed) {
+                          setShowUpgradeModal(true); // Replace with your modal
+                          return;
+                        }
+                        setReasonVisible((prev) => ({
+                          ...prev,
+                          [key]: !prev[key],
+                        }));
+                      }}
+                      className="mt-3 flex items-center text-sm text-cyan-600 hover:underline gap-2 italic"
+                    >
+                      <Image
+                        src="/images/hint.svg"
+                        alt="Info"
+                        width={20}
+                        height={20}
+                        className="rounded-full border border-cyan-600 hover:border-cyan-700 transition-all duration-200"
+                      />
+                      {language === "fr" ? "Indice" : "Hint"}
+                    </button>
+
+                    {isSubscribed && reasonVisible[key] && q.rationale && (
+                      <div
+                        className={`mt-3 p-4 rounded-md text-sm ${
+                          q.user_answer === q.answer
+                            ? "text-green-700 bg-green-100 border border-green-400"
+                            : "text-red-700 bg-red-100 border border-red-400"
+                        }`}
+                      >
+                        {q.rationale}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             );
           })}
@@ -330,8 +461,8 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
             {data.submitted ? (
               <>
                 {t.quiz_modal_score_label || "Score"}:{" "}
-                {data.result.score.mcqs + data.result.score.tf}/
-                {data.result.total.mcqs + data.result.total.tf}
+                {data.result.score.mcqs + data.result.score.true_false}/
+                {data.result.total.mcqs + data.result.total.true_false}
               </>
             ) : (
               <span className="italic text-gray-500">
@@ -353,6 +484,20 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
             </button>
           )}
         </div>
+      </div>
+      <div ref={upgradeRef}>
+        <UpgradeModal
+          visible={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            router.push("/subscription");
+          }}
+          title={t.upgrade_title}
+          description={t.upgrade_description}
+          cancelText={t.upgrade_cancel}
+          upgradeText={t.upgrade_button}
+        />
       </div>
     </div>
   );

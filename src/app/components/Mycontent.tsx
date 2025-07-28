@@ -7,11 +7,14 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
 import Dropdown from "@/app/components/dropdown";
 import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
-import LessonModal from "./LessonModal";
+import LessonModal from "./modals/LessonPreviewModal";
 import authApi from "../utils/authApi"; // adjust the path if needed
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import QuizPreviewModal from "./modals/QuizPreviewModal"; // adjust the path if needed
 import ReflectionPreviewModal from "./modals/ReflectionPreviewModal";
+import { useProfile } from "@/app/context/ProfileContext";
+import UpgradeModal from "./GlobalPopup/UpgradeModal"; // adjust path if needed
+import { useRouter } from "next/navigation";
 
 type LessonPreview = {
   id: number;
@@ -120,6 +123,10 @@ export default function MyContentPage() {
   const [selectedReflectionId, setSelectedReflectionId] = useState<
     number | null
   >(null);
+  const { profile } = useProfile();
+  const isSubscribed = profile?.is_subscribed === true;
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const router = useRouter();
 
   // Cleat Filter
 
@@ -160,9 +167,19 @@ export default function MyContentPage() {
         }
 
         console.log(queryParams.toString());
-        const finalUrl = url || `/history/preview/?${queryParams.toString()}`;
+        let finalUrl = url || `history/preview/?${queryParams.toString()}`; // note: no `/` in beginning
+
+        if (finalUrl.startsWith("http")) {
+          const parsed = new URL(finalUrl);
+          finalUrl = parsed.pathname + parsed.search;
+
+          if (finalUrl.startsWith("/api/")) {
+            finalUrl = finalUrl.replace(/^\/api/, ""); // remove duplicate api
+          }
+        }
 
         const res = await authApi.get(finalUrl);
+
         const data = res.data.response;
 
         setLessons(data.results);
@@ -415,16 +432,35 @@ export default function MyContentPage() {
                       {t.tab_lesson}
                     </button>
                     <button
-                      onClick={() => setSelectedQuizId(item.quiz_id)}
-                      className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
+                      onClick={() => {
+                        if (!isSubscribed) {
+                          setShowUpgradeModal(true);
+                        } else {
+                          setSelectedQuizId(item.quiz_id);
+                        }
+                      }}
+                      className={`px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg ${
+                        isSubscribed
+                          ? "bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white"
+                          : "bg-gray-300 text-gray-600 cursor-pointer"
+                      }`}
                     >
                       {t.tab_quiz}
                     </button>
+
                     <button
-                      onClick={() =>
-                        setSelectedReflectionId(item.reflection_id)
-                      }
-                      className="bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg"
+                      onClick={() => {
+                        if (!isSubscribed) {
+                          setShowUpgradeModal(true);
+                        } else {
+                          setSelectedReflectionId(item.reflection_id);
+                        }
+                      }}
+                      className={`px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg ${
+                        isSubscribed
+                          ? "bg-[#23BAD8] hover:bg-cyan-600 cursor-pointer text-white"
+                          : "bg-gray-300 text-gray-600 cursor-pointer"
+                      }`}
                     >
                       {t.tab_reflection}
                     </button>
@@ -515,6 +551,19 @@ export default function MyContentPage() {
           onClose={() => setSelectedReflectionId(null)}
         />
       )}
+
+      <UpgradeModal
+        visible={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgrade={() => {
+          setShowUpgradeModal(false);
+          router.push("/subscription");
+        }}
+        title={t.upgrade_title}
+        description={t.upgrade_description}
+        cancelText={t.upgrade_cancel}
+        upgradeText={t.upgrade_button}
+      />
     </div>
   );
 }

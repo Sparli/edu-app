@@ -29,20 +29,40 @@ export interface QuickGenerateFormData
   user_datetime: string;
 }
 
-export type GeneratedContent = {
-  lesson: Record<string, string | string[]>;
+export interface LessonContent {
+  lesson: {
+    heading: string;
+    content: string;
+  }[];
+  reflection: string;
+  valid_topic?: string;
+}
+
+export interface QuizContent {
   quiz: {
-    mcqs?: {
-      statement: string;
-      options: string[];
-    }[];
-    tf?: {
-      statement: string;
-      correct_answer: boolean;
-    }[];
+    mcqs: {
+      [key: string]: {
+        statement: string;
+        options: Record<string, string>;
+        answer: string;
+        
+      };
+    };
+    true_false: {
+      [key: string]: {
+        statement: string;
+        answer: boolean;
+        
+      };
+    };
   };
   reflection: string;
-};
+  valid_topic?: string;
+}
+
+export type GeneratedContent = LessonContent & QuizContent;
+
+
 
 
 /* -----------------------------------------------------------
@@ -56,10 +76,15 @@ export type GenerateRequest = QuickGenerateFormData;
 export interface GenerateResponse {
   success: true;
   data: {
-    response: GeneratedContent;
+    valid_topic: string;
+    generated_content: GeneratedContent;
+    user_input: QuickGenerateFormData;
     is_valid: boolean;
+    submitted_quiz: boolean;
+    submitted_ref: boolean;
   };
 }
+
 
 /** Structure if the backend signals an error */
 export interface GenerateError {
@@ -68,28 +93,34 @@ export interface GenerateError {
 }
 
 
+
 export type QuizSubmitResult = {
   score: {
     mcqs: number;
-    tf: number;
+    true_false: number;
   };
   total: {
     mcqs: number;
-    tf: number;
+    true_false: number;
   };
   details: {
     mcqs: {
-      question: string;
-      correct: boolean;
-      user_answer: number;
-      correct_answer: number;
-    }[];
-    tf: {
-      statement: string;
-      correct: boolean;
-      user_answer: boolean;
-      correct_answer: boolean;
-    }[];
+      [questionId: string]: {
+        correct: boolean;
+        user_answer: string;         
+        correct_answer: string;
+        rationale?: string;     
+      };
+    };
+    true_false: {
+      [questionId: string]: {
+        correct: boolean;
+        user_answer: boolean;
+        correct_answer: boolean;
+        rationale?: string;
+      };
+    };
   };
 };
+
 

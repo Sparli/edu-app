@@ -6,7 +6,6 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "../translations";
 import CustomDropdown from "@/app/components/CustomDropdown";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
-import PremiumLockModal from "@/app/components/PremiumLockModal";
 import { FaCrown } from "react-icons/fa";
 import { useProfile } from "@/app/context/ProfileContext";
 
@@ -17,6 +16,7 @@ import type {
   Difficulty,
   Subject,
 } from "@/app/types/content";
+import UpgradeModal from "./GlobalPopup/UpgradeModal";
 
 export default function QuickGenerate() {
   const router = useRouter();
@@ -371,6 +371,15 @@ export default function QuickGenerate() {
                   setForm({ ...form, topic: e.target.value });
                 }
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+
+                  if (isFormComplete && !isLoading) {
+                    handleGenerate(); // Triggers the same as clicking the button
+                  }
+                }
+              }}
               className="w-full p-2 text-xl bg-white rounded focus:outline-none text-[#1F2937]"
             />
           </div>
@@ -403,15 +412,22 @@ export default function QuickGenerate() {
           )}
         </button>
       </div>
-      {showPremiumModal && (
-        <PremiumLockModal
-          t={t}
-          onClose={() => {
-            setShowPremiumModal(false);
-            setForm((prev) => ({ ...prev, difficulty: previousDifficulty }));
-          }}
-        />
-      )}
+
+      <UpgradeModal
+        visible={showPremiumModal}
+        onClose={() => {
+          setShowPremiumModal(false);
+          setForm((prev) => ({ ...prev, difficulty: previousDifficulty }));
+        }}
+        onUpgrade={() => {
+          setShowPremiumModal(false);
+          router.push("/subscription");
+        }}
+        title={t.upgrade_title}
+        description={t.upgrade_description}
+        cancelText={t.upgrade_cancel}
+        upgradeText={t.upgrade_button}
+      />
     </div>
   );
 }

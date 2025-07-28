@@ -4,7 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { ExternalLink } from "lucide-react";
 import LessonModal from "@/app/components/modals/LessonModal";
 import QuizModal from "@/app/components/modals/QuizModal";
-import type { Subject, Level } from "@/app/types/content";
+import type {
+  GeneratedContent as IContent,
+  Subject,
+  Level,
+} from "@/app/types/content";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "../translations";
 import Image from "next/image";
@@ -13,6 +17,17 @@ import { submitReflection } from "../api/reflectionApi";
 import { saveContent } from "../api/saveContentApi";
 
 type Language = "English" | "French";
+
+interface Props {
+  content: IContent;
+  meta: {
+    topic: string;
+    subject: Subject;
+    level: Level;
+    language: Language;
+  };
+  error?: string | null;
+}
 
 type MCQQuestion = {
   type: "mcq";
@@ -28,31 +43,6 @@ type TFQuestion = {
 
 type QuizQuestion = MCQQuestion | TFQuestion;
 
-interface Props {
-  content: {
-    lesson: Record<string, string | string[]>;
-    quiz: {
-      mcqs?: {
-        statement: string;
-        options: string[];
-      }[];
-      tf?: {
-        statement: string;
-        correct_answer: boolean;
-      }[];
-    };
-    reflection: string;
-  };
-  meta: {
-    topic: string;
-    subject: Subject;
-    level: Level;
-    language: Language; // ✅ Add this if missing
-  };
-
-  error?: string | null;
-}
-
 // ✅ STEP 1: Use static tab keys internally
 const tabKeys = ["lesson", "quiz", "reflection"] as const;
 type TabKey = (typeof tabKeys)[number];
@@ -65,9 +55,20 @@ export default function GeneratedContent({ content, meta, error }: Props) {
 
   // Build unified quiz question list
   const allQuestions: QuizQuestion[] = [
-    ...(content.quiz.mcqs?.map((q): MCQQuestion => ({ type: "mcq", ...q })) ||
-      []),
-    ...(content.quiz.tf?.map((q): TFQuestion => ({ type: "tf", ...q })) || []),
+    ...Object.values(content.quiz.mcqs || {}).map(
+      (q): MCQQuestion => ({
+        type: "mcq",
+        statement: q.statement,
+        options: Object.entries(q.options).map(([key, val]) => `${key}:${val}`),
+      })
+    ),
+    ...Object.values(content.quiz.true_false || {}).map(
+      (q): TFQuestion => ({
+        type: "tf",
+        statement: q.statement,
+        correct_answer: q.answer,
+      })
+    ),
   ];
 
   const totalQuestions = allQuestions.length;
@@ -262,29 +263,16 @@ export default function GeneratedContent({ content, meta, error }: Props) {
               className="space-y-6 cursor-pointer"
               onClick={() => setShowModal(true)}
             >
-              {Object.entries(content.lesson).map(
-                ([sectionKey, sectionContent]) => (
-                  <div key={sectionKey}>
-                    <h2 className="text-lg font-semibold capitalize text-[#1F2937] mb-1">
-                      {sectionKey.replace(/_/g, " ")}
-                    </h2>
-
-                    {Array.isArray(sectionContent) ? (
-                      <ul className="list-disc pl-5 text-[#4B5563] text-base space-y-1">
-                        {sectionContent.map((item, idx) => (
-                          <li key={idx}>
-                            <MathText content={item} />
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="text-[#4B5563] text-lg whitespace-pre-line">
-                        <MathText content={sectionContent} />
-                      </div>
-                    )}
+              {content.lesson.map((section, idx) => (
+                <div key={idx}>
+                  <h2 className="text-lg font-semibold capitalize text-[#1F2937] mb-1">
+                    {section.heading}
+                  </h2>
+                  <div className="text-[#4B5563] text-lg whitespace-pre-line">
+                    <MathText content={section.content} />
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           )}
 
@@ -320,7 +308,9 @@ export default function GeneratedContent({ content, meta, error }: Props) {
                                   : "bg-gray-200 hover:bg-gray-300 text-gray-800"
                               }`}
                             >
-                              <MathText content={opt} />
+                              <MathText
+                                content={opt.replace(/^[a-d]:\s*/, "")}
+                              />
                             </button>
                           );
                         }
@@ -390,10 +380,11 @@ export default function GeneratedContent({ content, meta, error }: Props) {
               {reflectionFeedback && (
                 <div
                   ref={feedbackRef}
-                  className="mt-4 text-green-700 bg-green-100 border border-green-400 rounded-md p-2"
+                  className="mt-4 text-green-700 bg-green-100 border border-green-400 rounded-md p-2 whitespace-pre-wrap"
                 >
-                  <strong>{contentLang.label_feedback}:</strong>{" "}
-                  {reflectionFeedback}
+                  <strong>{contentLang.label_feedback}</strong>
+                  <br />
+                  <MathText content={reflectionFeedback} />
                 </div>
               )}
 
@@ -497,29 +488,55 @@ export default function GeneratedContent({ content, meta, error }: Props) {
         </div>
       </div>
 
-      {/* Modals */}
       {!error && showModal && activeTab === "lesson" && (
         <LessonModal
-          content={content}
+          content={{
+            lesson: content.lesson,
+            reflection: content.reflection,
+            valid_topic: content.valid_topic, // if needed
+          }}
           topic={meta.topic}
           subject={meta.subject}
           level={meta.level}
-          generatedAt={new Date()} // <-- ADD THIS
+          generatedAt={new Date()}
           onClose={() => setShowModal(false)}
         />
       )}
 
-      {!error && showModal && activeTab === "quiz" && (
-        <QuizModal
-          content={content}
-          topic={meta.topic}
-          subject={meta.subject}
-          level={meta.level}
-          language={meta.language}
-          generatedAt={new Date()} // <-- ADD THIS
-          onClose={() => setShowModal(false)}
-        />
-      )}
+      {!error &&
+        showModal &&
+        activeTab === "quiz" &&
+        (() => {
+          const normalizedQuizContent = {
+            mcqs: Object.values(content.quiz.mcqs || {}).map((q) => ({
+              statement: q.statement,
+              options: Object.entries(q.options).map(
+                ([key, value]) => `${key}|${value}`
+              ),
+            })),
+
+            tf: Object.values(content.quiz.true_false || {}).map((q) => ({
+              statement: q.statement,
+              correct_answer: q.answer,
+            })),
+          };
+
+          return (
+            <QuizModal
+              content={{
+                quiz: normalizedQuizContent,
+                reflection: content.reflection,
+                valid_topic: content.valid_topic,
+              }}
+              topic={meta.topic}
+              subject={meta.subject}
+              level={meta.level}
+              language={meta.language}
+              generatedAt={new Date()}
+              onClose={() => setShowModal(false)}
+            />
+          );
+        })()}
     </div>
   );
 }

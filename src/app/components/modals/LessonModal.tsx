@@ -10,17 +10,10 @@ import MathText from "@/app/components/MathText";
 import authApi from "@/app/utils/authApi";
 import axios from "axios";
 import { useProfile } from "@/app/context/ProfileContext";
-
+import type { LessonContent } from "@/app/types/content";
+import UpgradeModal from "../GlobalPopup/UpgradeModal";
 interface Props {
-  content: {
-    lesson: Record<string, string | string[]>;
-    quiz: {
-      mcqs?: { statement: string; options: string[] }[];
-      tf?: { statement: string; correct_answer: boolean }[];
-    };
-    reflection: string;
-    valid_topic?: string; // <-- ADD THIS
-  };
+  content: LessonContent;
   topic: string;
   subject: Subject;
   level: Level;
@@ -39,6 +32,8 @@ export default function LessonModal({
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>("");
   const modalRef = useRef<HTMLDivElement>(null);
+  const upgradeRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
@@ -50,16 +45,21 @@ export default function LessonModal({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const { profile } = useProfile();
   const isSubscribed = profile?.is_subscribed === true;
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
       if (
         modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
+        !modalRef.current.contains(target) &&
+        upgradeRef.current &&
+        !upgradeRef.current.contains(target)
       ) {
         onClose();
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
@@ -129,69 +129,72 @@ export default function LessonModal({
               <FiEdit />
               {t.modal_edit}
             </button>
-            {isSubscribed && (
-              <button
-                className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
-                onClick={async () => {
-                  setDownloading(true);
-                  setDownloadError(null); // clear previous error
-                  try {
-                    const res = await authApi.get("/content/gen/pdf/", {
-                      params: { type: "lesson" },
-                    });
+            <button
+              className="flex items-center gap-1 hover:text-black cursor-pointer disabled:opacity-50"
+              onClick={async () => {
+                if (!isSubscribed) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
 
-                    const { success, pdf_url } = res.data;
-                    if (success && pdf_url) {
-                      window.open(pdf_url, "_blank");
-                    } else {
-                      setDownloadError(
-                        language === "fr"
-                          ? "PDF non prêt. Veuillez réessayer."
-                          : "PDF not ready. Please try again."
-                      );
-                    }
-                  } catch (err: unknown) {
-                    if (axios.isAxiosError(err) && err.response) {
-                      const status = err.response.status;
-                      const isFr = language === "fr";
+                setDownloading(true);
+                setDownloadError(null); // clear previous error
+                try {
+                  const res = await authApi.get("/content/gen/pdf/", {
+                    params: { type: "lesson" },
+                  });
 
-                      if (status === 404) {
-                        setDownloadError(
-                          isFr
-                            ? "Veuillez générer le contenu avant de télécharger un PDF."
-                            : "Please generate content before downloading a PDF."
-                        );
-                      } else if (status === 401) {
-                        setDownloadError(
-                          isFr
-                            ? "Session expirée. Veuillez vous reconnecter."
-                            : "Session expired. Please log in again."
-                        );
-                      } else {
-                        setDownloadError(
-                          isFr
-                            ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
-                            : "Could not download PDF. Try again later."
-                        );
-                      }
-                    } else {
-                      setDownloadError(
-                        language === "fr"
-                          ? "Une erreur inattendue est survenue."
-                          : "An unexpected error occurred."
-                      );
-                    }
-                    console.error("[LessonModal] ❌ PDF Download failed", err);
-                  } finally {
-                    setDownloading(false);
+                  const { success, pdf_url } = res.data;
+                  if (success && pdf_url) {
+                    window.open(pdf_url, "_blank");
+                  } else {
+                    setDownloadError(
+                      language === "fr"
+                        ? "PDF non prêt. Veuillez réessayer."
+                        : "PDF not ready. Please try again."
+                    );
                   }
-                }}
-                disabled={downloading}
-              >
-                <FiDownload />
-                {downloading ? "Downloading..." : t.modal_download}
-              </button>
-            )}
+                } catch (err: unknown) {
+                  if (axios.isAxiosError(err) && err.response) {
+                    const status = err.response.status;
+                    const isFr = language === "fr";
+
+                    if (status === 404) {
+                      setDownloadError(
+                        isFr
+                          ? "Veuillez générer le contenu avant de télécharger un PDF."
+                          : "Please generate content before downloading a PDF."
+                      );
+                    } else if (status === 401) {
+                      setDownloadError(
+                        isFr
+                          ? "Session expirée. Veuillez vous reconnecter."
+                          : "Session expired. Please log in again."
+                      );
+                    } else {
+                      setDownloadError(
+                        isFr
+                          ? "Impossible de télécharger le PDF. Veuillez réessayer plus tard."
+                          : "Could not download PDF. Try again later."
+                      );
+                    }
+                  } else {
+                    setDownloadError(
+                      language === "fr"
+                        ? "Une erreur inattendue est survenue."
+                        : "An unexpected error occurred."
+                    );
+                  }
+                  console.error("[LessonModal] ❌ PDF Download failed", err);
+                } finally {
+                  setDownloading(false);
+                }
+              }}
+              disabled={downloading}
+            >
+              <FiDownload />
+              {downloading ? "Downloading..." : t.modal_download}
+            </button>
           </div>
           {downloadError && (
             <p className="text-sm text-red-600 justify-end mt-2">
@@ -207,28 +210,16 @@ export default function LessonModal({
           <div className="flex flex-col md:flex-row justify-between gap-6">
             <div className="flex-1 lg:max-w-[90%] text-gray-700 leading-relaxed space-y-6 text-[15px]">
               <div className="space-y-6">
-                {Object.entries(content.lesson).map(
-                  ([sectionKey, sectionContent]) => (
-                    <div key={sectionKey}>
-                      <h2 className="lg:text-2xl text-xl font-semibold capitalize text-[#1F2937] mb-1">
-                        {sectionKey.replace(/_/g, " ")}
-                      </h2>
-                      {Array.isArray(sectionContent) ? (
-                        <ul className="list-disc pl-5 text-[#4B5563] text-base lg:text-lg space-y-1">
-                          {sectionContent.map((item, idx) => (
-                            <li key={idx}>
-                              <MathText content={item} />
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div className="text-[#4B5563] text-base lg:text-lg whitespace-pre-line">
-                          <MathText content={sectionContent as string} />
-                        </div>
-                      )}
+                {content.lesson.map((section, idx) => (
+                  <div key={idx}>
+                    <h2 className="text-xl font-medium capitalize text-[#1F2937] mb-1">
+                      <MathText content={section.heading} />
+                    </h2>
+                    <div className="text-[#4B5563] text-base lg:text-md whitespace-pre-wrap">
+                      <MathText content={section.content} />
                     </div>
-                  )
-                )}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -237,12 +228,11 @@ export default function LessonModal({
                 className="flex items-center gap-1 hover:text-black cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
-                  const text = Object.entries(content.lesson)
-                    .map(([key, val]) => {
-                      const title = key.replace(/_/g, " ").toUpperCase();
-                      const body = Array.isArray(val) ? val.join("\n") : val;
-                      return `${title}\n${body}`;
-                    })
+                  const text = content.lesson
+                    .map(
+                      (section) =>
+                        `${section.heading.toUpperCase()}\n${section.content}`
+                    )
                     .join("\n\n");
 
                   // Fallback for older mobile browsers
@@ -341,6 +331,20 @@ export default function LessonModal({
             )}
           </div>
         </div>
+      </div>
+      <div ref={upgradeRef}>
+        <UpgradeModal
+          visible={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            router.push("/subscription");
+          }}
+          title={t.upgrade_title}
+          description={t.upgrade_description}
+          cancelText={t.upgrade_cancel}
+          upgradeText={t.upgrade_button}
+        />
       </div>
     </div>
   );

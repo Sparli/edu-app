@@ -7,7 +7,7 @@ import { clearQuizSubmission } from "@/app/components/modals/QuizModal";
 import LabalDropdown from "@/app/components/labal-dropdown";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useProfile } from "@/app/context/ProfileContext";
-import PremiumLockModal from "@/app/components/PremiumLockModal";
+import { useRouter } from "next/navigation";
 import { FaCrown } from "react-icons/fa";
 import { getUserProfile } from "@/app/utils/getUserProfile";
 
@@ -18,6 +18,7 @@ import type {
   Subject,
   Difficulty,
 } from "@/app/types/content";
+import UpgradeModal from "./GlobalPopup/UpgradeModal";
 
 interface Props {
   onGenerate: (data: GenerateRequest) => Promise<void>;
@@ -72,6 +73,7 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
 
   const { language } = useLanguage();
   const t = translations[language];
+  const router = useRouter();
 
   // 🔁 Reverse maps to convert French back to English before sending to backend
   const reverseLevelMap = Object.entries(translations.en.levels).reduce(
@@ -154,7 +156,6 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       }, 1000);
     }
   };
-
   // Handle clicks outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -424,7 +425,7 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       />
 
       {/* Topic Textarea (unchanged) */}
-      <div className="mb-2  border bg-white border-[#d1d9e7] p-2 rounded-lg">
+      <div className="mb-2 border bg-white border-[#d1d9e7] p-2 rounded-lg">
         <label className="block text-lg font-medium text-cyan-500 mb-1">
           {t.generate_topic_label}
         </label>
@@ -437,8 +438,15 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
               setForm({ ...form, topic: e.target.value });
             }
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleClick(); // This triggers the button's action
+            }
+          }}
           className="w-full h-14 resize-none focus:outline-none text-[#a1a8b4] text-lg p-1"
         />
+
         <p className="text-right text-sm text-gray-500 mt-1">
           {form.topic.length}/150
         </p>
@@ -467,15 +475,21 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
           t.generate_button
         )}
       </button>
-      {showPremiumModal && (
-        <PremiumLockModal
-          t={t}
-          onClose={() => {
-            setShowPremiumModal(false);
-            setForm((prev) => ({ ...prev, difficulty: previousDifficulty }));
-          }}
-        />
-      )}
+      <UpgradeModal
+        visible={showPremiumModal}
+        onClose={() => {
+          setShowPremiumModal(false);
+          setForm((prev) => ({ ...prev, difficulty: previousDifficulty }));
+        }}
+        onUpgrade={() => {
+          setShowPremiumModal(false);
+          router.push("/subscription");
+        }}
+        title={t.upgrade_title}
+        description={t.upgrade_description}
+        cancelText={t.upgrade_cancel}
+        upgradeText={t.upgrade_button}
+      />
     </div>
   );
 }

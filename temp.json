@@ -1,0 +1,223 @@
+// new basic schema
+{
+    "success": true,
+    "data": {
+        "valid_topic": "Space-Time Theory",
+        "generated_content": {
+            "lesson": [
+                {
+                    "heading": "Introduction to Space-Time",
+                    "content": "Space-time is a way to describe the universe. It helps us understand how objects in space, like stars and planets, move and interact with each other. Think of space-time as a big, stretchy fabric that combines space and time into one thing."
+                },
+                {
+                    "heading": "Why is Space-Time Important?",
+                    "content": "Space-time helps scientists understand the universe better. It explains things like gravity — which is what keeps planets in orbit — and how the universe is expanding. Learning about space-time helps us learn more about the universe we live in."
+                }
+            ],
+            "quiz": {
+                "mcqs": {
+                    "1": {
+                        "statement": "What is space-time?",
+                        "options": {
+                            "a": "A way to describe the universe by combining space and time",
+                            "b": "A type of fabric that stars and planets are made of",
+                            "c": "A measure of how fast objects move in space",
+                            "d": "A theory about how planets orbit the sun"
+                        },
+                        "answer": "a"
+                    },
+                    "2": {
+                        "statement": "What is space?",
+                        "options": {
+                            "a": "A small area inside Earth",
+                            "b": "The empty area outside Earth with stars and planets",
+                            "c": "The measurement of time passing",
+                            "d": "A fabric that combines space and time"
+                        },
+                        "answer": "b"
+                    },
+                    "3": {
+                        "statement": "How are space and time connected in space-time?",
+                        "options": {
+                            "a": "They are completely separate and have no influence on each other",
+                            "b": "Changes in space have no effect on time",
+                            "c": "When something moves in space, it also affects time",
+                            "d": "Time moves faster than space"
+                        },
+                        "answer": "c"
+                    }
+                },
+                "true_false": {
+                    "1": {
+                        "statement": "Space is mostly empty.",
+                        "answer": true
+                    },
+                    "2": {
+                        "statement": "Time helps us understand when things happen.",
+                        "answer": true
+                    },
+                    "3": {
+                        "statement": "Einsteins's Space-Time Theory explains how space and time are unconnected.",
+                        "answer": false
+                    }
+                }
+            },
+            "reflection": "How do you think understanding space-time can help us explore the universe?"
+        },
+        "user_input": {
+            "subject": "Science and Technology",
+            "topic": "Space-Time Theory",
+            "level": "Primary",
+            "difficulty": "beginner",
+            "language": "English",
+            "user_datetime": "2025-06-05T09:29:03.123000Z"
+        },
+        "is_valid": true,
+        "submitted_quiz": false,
+        "submitted_ref": false
+    }
+}
+
+
+
+// new generation schema for premium generation:
+
+{
+    "success": true,
+    "data": {
+        "valid_topic": "Space-Time Theory",
+        "generated_content": {
+            "lesson": [
+                {
+                    "heading": "Welcome to Space-Time!",
+                    "content": "Today, we’re exploring a cool idea called Space-Time. It helps us understand how the universe works, combining space (where things are) and time (when things happen) into one big picture."
+                },
+                {
+                    "heading": "Summary",
+                    "content": "Space-Time theory combines space and time into a single fabric, explaining gravity, orbits, and even how GPS works. It reveals the universe’s amazing dance, showing how everything from stars to smartphones relies on this incredible concept!"
+                }
+            ],
+            "quiz": {
+                "mcqs": {
+                    "1": {
+                        "statement": "What does Space-Time theory aim to help us understand?",
+                        "options": {
+                            "a": "How the universe works by combining space and time.",
+                            "b": "How to build rockets for space travel.",
+                            "c": "The anatomy of black holes.",
+                            "d": "The behavior of ocean tides."
+                        },
+                        "answer": "a",
+                        "rationale": "Space-Time theory aims to understand how the universe works by merging space (where things are) and time (when things happen) into a unified picture, as mentioned in the lesson."
+                    },
+                    "10": {
+                        "statement": "How does Space-Time theory impact the functioning of GPS technology?",
+                        "options": {
+                            "a": "It interferes with satellite communication signals.",
+                            "b": "It corrects location errors caused by space and time differences.",
+                            "c": "It speeds up the time displayed on GPS devices.",
+                            "d": "It prevents accurate weather predictions."
+                        },
+                        "answer": "b",
+                        "rationale": "Space-Time theory impacts GPS technology by correcting location errors caused by space and time differences, ensuring accurate mapping and guidance, as explained in the lesson."
+                    }
+                },
+                "true_false": {
+                    "1": {
+                        "statement": "Space is a small area filled with objects like stars and planets.",
+                        "answer": false,
+                        "rationale": "This statement is false. Space is described in the lesson as a vast, empty area beyond Earth where stars, planets, and asteroids float around."
+                    },
+                    "10": {
+                        "statement": "GPS technology would function just as effectively without considering the effects of gravity.",
+                        "answer": false,
+                        "rationale": "This statement is false. Gravity, a concept affected by Space-Time theory, plays a crucial role in the functioning of GPS technology, highlighting its importance in guiding accurate mapping as per the lesson."
+                    }
+                }
+            },
+            "reflection": "How do you think understanding Space-Time theory can help us in our daily lives or in future scientific discoveries?"
+        },
+        "user_input": {
+            "subject": "Science and Technology",
+            "topic": "Space-Time Theory",
+            "level": "Primary",
+            "difficulty": "beginner",
+            "language": "English",
+            "user_datetime": "2025-06-05T09:29:03.123000Z"
+        },
+        "is_valid": true,
+        "submitted_quiz": false,
+        "submitted_ref": false
+    }
+}
+
+
+
+
+old schema:
+_______
+
+
+{
+    "success": true,
+    "data": {
+        "valid_topic": "Musical Notes",
+        "response": {
+            "lesson": {
+                "Title": "Decoding Pitch: A Journey Through Musical Notes",
+                "Introduction": "Imagine music without melody or harmony It’s the key signature that turns a series of vibrations in the air into Beethoven’s Fifth Symphony. Musical notes are the building blocks of all music, and understanding how they work is crucial for any musician.",
+                "Core Explanation": "Each note represents a specific pitch. The seven main notes are A, B, C, D, E, F, and G. Each note can be natural (no alterations), sharp (raised by a half-step), or flat (lowered by a half-step). For example, C to C♯ is an upward movement, and B to B♭ is a downward one. A piano spans 88 keys, and a note can exist in multiple octaves.",
+                "Practical Examples": [
+                    "Playing a C major scale on the piano.",
+                    "Identifying and singing intervals—moving from C to E.",
+                    "Reading and clapping a rhythmic pattern."
+                ],
+                "Competency Focus": "You will develop pitch recognition, interval training, and the ability to read and perform simple melodies.",
+                "Conclusion": "Mastering musical notes opens up a world of songs, from folk melodies to pop hits. Keep practicing your scales and ear training for a deep understanding of pitch and harmony."
+            },
+            "quiz": {
+                "mcqs": [
+                    {
+                        "statement": "Which note has no sharps or flats in its key signature?",
+                        "options": [
+                            "A",
+                            "C",
+                            "F",
+                            "G"
+                        ]
+                    },
+                    {
+                        "statement": "A note that is lower by a half-step is called what?",
+                        "options": [
+                            "Flat note",
+                            "Whole note",
+                            "Quarter note",
+                            "Sharp note"
+                        ]
+                    }
+                ],
+                "tf": [
+                    {
+                        "statement": "The note E♯ is equivalent to F."
+                    },
+                    
+                    {
+                        "statement": "A# is the enharmonic equivalent of B♭."
+                    }
+                ]
+            },
+            "reflection": "How will you use your new understanding of musical notes to learn and perform your favorite songs?",
+            "user_input": {
+                "subject": "Music",
+                "topic": "Musical Notes",
+                "level": "Secondary",
+                "difficulty": "Intermediate",
+                "language": "en",
+                "user_datetime": "2025-06-05T09:29:03.123000Z"
+            }
+        },
+        "is_valid": true,
+        "submitted_quiz": false,
+        "submitted_ref": false
+    }
+}

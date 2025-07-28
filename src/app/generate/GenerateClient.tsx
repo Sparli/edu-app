@@ -139,7 +139,7 @@ export default function GenerateClient() {
           return;
         }
 
-        const { response: generated, is_valid } = resData.data;
+        const { generated_content: generated, is_valid } = resData.data;
 
         if (!is_valid) {
           setContent(null);
@@ -324,7 +324,14 @@ export default function GenerateClient() {
                   <GeneratedContentSkeleton />
                 ) : error && meta ? (
                   <GeneratedContent
-                    content={{ lesson: {}, quiz: {}, reflection: "" }}
+                    content={{
+                      lesson: [],
+                      quiz: {
+                        mcqs: {},
+                        true_false: {},
+                      },
+                      reflection: "",
+                    }}
                     meta={{
                       topic: meta.topic,
                       subject: meta.subject,
