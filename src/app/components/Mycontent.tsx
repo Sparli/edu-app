@@ -456,8 +456,9 @@ export default function MyContentPage() {
                         const enKey = toEnglishSubject(item.subject);
                         const display = subjectLabelFor(
                           item.subject,
-                          item.language
+                          language === "fr" ? "French" : "English"
                         );
+
                         return (
                           <>
                             <Image
