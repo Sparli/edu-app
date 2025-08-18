@@ -97,6 +97,85 @@ const subjectIcons: Record<string, string> = {
   "Physical Education and Health": "/images/health.svg", // Suggest: heart, dumbbell
 };
 
+// ---- helpers: content-language & subject mapping ----
+// const contentLangCode = (lang: string) => (lang === "French" ? "fr" : "en");
+
+// Map any subject label (EN/FR) to the EN key (for icons/lookups)
+const toEnglishSubject = (label: string) => {
+  for (const group of subjectGroups) {
+    for (const subj of group.subjects) {
+      if (label === subj.en || label === subj.fr) return subj.en;
+    }
+  }
+  return label;
+};
+
+// Get display label for the subject in the *item’s* content language
+const subjectLabelFor = (subject: string, itemLanguage: string) => {
+  const targetFr = itemLanguage === "French";
+  for (const group of subjectGroups) {
+    for (const subj of group.subjects) {
+      if (subject === subj.en || subject === subj.fr) {
+        return targetFr ? subj.fr : subj.en;
+      }
+    }
+  }
+  return subject;
+};
+
+// Localize the language name using the global UI language
+const uiLanguageName = (
+  contentLang: "English" | "French",
+  uiLangCode: "en" | "fr" | string
+) => {
+  const isFR = uiLangCode === "fr";
+  if (contentLang === "French") return isFR ? "Français" : "French";
+  return isFR ? "Anglais" : "English";
+};
+
+// Map UI language code ('en' | 'fr') to a BCP-47 locale for dates
+const uiDateLocale = (uiLang: string) => (uiLang === "fr" ? "fr" : "en");
+
+// English-only title case (keeps common small words lowercased unless first/last)
+const englishTitleCase = (input: string) => {
+  const small = new Set([
+    "a",
+    "an",
+    "and",
+    "as",
+    "at",
+    "but",
+    "by",
+    "for",
+    "from",
+    "in",
+    "into",
+    "nor",
+    "of",
+    "on",
+    "or",
+    "over",
+    "per",
+    "the",
+    "to",
+    "via",
+    "with",
+  ]);
+  return input
+    .split(/\s+/)
+    .map((word, i, arr) => {
+      const w = word.toLowerCase();
+      const isBoundary = i === 0 || i === arr.length - 1;
+      if (!isBoundary && small.has(w)) return w;
+      // handle hyphenated words like “state-of-the-art”
+      return w
+        .split("-")
+        .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
+        .join("-");
+    })
+    .join(" ");
+};
+
 export default function MyContentPage() {
   const { language } = useLanguage();
   const t = translations[language];
@@ -127,6 +206,12 @@ export default function MyContentPage() {
   const isSubscribed = profile?.is_subscribed === true;
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const router = useRouter();
+  const [selectedQuizLanguage, setSelectedQuizLanguage] = useState<
+    "English" | "French" | null
+  >(null);
+  const [selectedReflectionLanguage, setSelectedReflectionLanguage] = useState<
+    "English" | "French" | null
+  >(null);
 
   // Cleat Filter
 
@@ -197,17 +282,6 @@ export default function MyContentPage() {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
-
-  const translateSubject = (subject: string): string => {
-    for (const group of subjectGroups) {
-      for (const subj of group.subjects) {
-        if (subj.en === subject || subj.fr === subject) {
-          return language === "fr" ? subj.fr : subj.en;
-        }
-      }
-    }
-    return subject;
-  };
 
   const [showFilters, setShowFilters] = useState(false);
 
@@ -378,15 +452,24 @@ export default function MyContentPage() {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center text-lg gap-2 font-semibold text-gray-800">
-                      <Image
-                        src={
-                          subjectIcons[item.subject] || "/images/default.svg"
-                        }
-                        alt={item.subject}
-                        width={25}
-                        height={25}
-                      />
-                      {translateSubject(item.subject)}
+                      {(() => {
+                        const enKey = toEnglishSubject(item.subject);
+                        const display = subjectLabelFor(
+                          item.subject,
+                          item.language
+                        );
+                        return (
+                          <>
+                            <Image
+                              src={subjectIcons[enKey] || "/images/default.svg"}
+                              alt={display}
+                              width={25}
+                              height={25}
+                            />
+                            {display}
+                          </>
+                        );
+                      })()}
                     </div>
                     <button
                       onClick={(e) => {
@@ -400,28 +483,36 @@ export default function MyContentPage() {
                       <IoTrashOutline size={18} />
                     </button>
                   </div>
-
                   <div className="mb-4 mt-4 inline-block rounded-full bg-[#C2D7F3] text-[#1D4ED8] text-lg px-3 py-1">
-                    {item.difficulty}
+                    {
+                      translations[language].difficulties[
+                        item.difficulty as
+                          | "Beginner"
+                          | "Intermediate"
+                          | "Advanced"
+                      ]
+                    }
                   </div>
                   <div className="mb-4 mt-4 ml-4 inline-block rounded-full bg-[#C2D7F3] text-[#1D4ED8] text-lg px-3 py-1">
-                    {item.language}
+                    {uiLanguageName(
+                      item.language as "English" | "French",
+                      language
+                    )}
                   </div>
 
                   <p className="text-sm text-gray-500 mt-1 mb-1">
                     {item.generation_datetime
-                      ? new Date(item.generation_datetime).toLocaleDateString()
+                      ? new Date(item.generation_datetime).toLocaleDateString(
+                          uiDateLocale(language),
+                          { year: "numeric", month: "long", day: "numeric" }
+                        )
                       : "—"}
                   </p>
 
                   <h2 className="font-semibold lg:text-lg mb-8">
-                    {" "}
-                    {item.topic
-                      .split(" ")
-                      .map(
-                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                      )
-                      .join(" ")}
+                    {item.language === "English"
+                      ? englishTitleCase(item.topic)
+                      : item.topic}
                   </h2>
 
                   <div className="flex gap-3 items-center">
@@ -437,6 +528,10 @@ export default function MyContentPage() {
                           setShowUpgradeModal(true);
                         } else {
                           setSelectedQuizId(item.quiz_id);
+                          // ADD:
+                          setSelectedQuizLanguage(
+                            item.language as "English" | "French"
+                          );
                         }
                       }}
                       className={`px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg ${
@@ -454,6 +549,9 @@ export default function MyContentPage() {
                           setShowUpgradeModal(true);
                         } else {
                           setSelectedReflectionId(item.reflection_id);
+                          setSelectedReflectionLanguage(
+                            item.language as "English" | "French"
+                          ); // ⬅️ add
                         }
                       }}
                       className={`px-4 lg:py-[10px] py-2 lg:w-1/3 w-full rounded-xl text-lg ${
@@ -541,14 +639,22 @@ export default function MyContentPage() {
       {selectedQuizId && (
         <QuizPreviewModal
           quizId={selectedQuizId}
-          onClose={() => setSelectedQuizId(null)}
+          contentLanguage={selectedQuizLanguage ?? "English"}
+          onClose={() => {
+            setSelectedQuizId(null);
+            setSelectedQuizLanguage(null);
+          }}
         />
       )}
 
       {selectedReflectionId && (
         <ReflectionPreviewModal
           reflectionId={selectedReflectionId}
-          onClose={() => setSelectedReflectionId(null)}
+          contentLanguage={selectedReflectionLanguage ?? "English"} // ⬅️ add
+          onClose={() => {
+            setSelectedReflectionId(null);
+            setSelectedReflectionLanguage(null); // ⬅️ reset
+          }}
         />
       )}
 

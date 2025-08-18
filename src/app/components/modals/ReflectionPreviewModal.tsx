@@ -11,9 +11,11 @@ import { useProfile } from "@/app/context/ProfileContext";
 import { useRouter } from "next/navigation";
 import UpgradeModal from "../GlobalPopup/UpgradeModal"; // adjust path if needed
 import ContentSpinner from "@/app/sections/ContentSpinner";
+import MathText from "../MathText";
 
 interface Props {
   reflectionId: number;
+  contentLanguage: "English" | "French"; // ⬅️ add this
   onClose: () => void;
 }
 
@@ -30,6 +32,7 @@ type ReflectionResponse = {
 
 export default function ReflectionPreviewModal({
   reflectionId,
+  contentLanguage,
   onClose,
 }: Props) {
   const [data, setData] = useState<ReflectionResponse | null>(null);
@@ -37,6 +40,10 @@ export default function ReflectionPreviewModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
   const t = translations[language];
+  // Use the content language for value labels + date formatting
+  const langKey = contentLanguage === "French" ? "fr" : "en";
+  const tContent = translations[langKey];
+
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const { profile } = useProfile();
@@ -143,6 +150,18 @@ export default function ReflectionPreviewModal({
     }
   };
 
+  const subjectLabel =
+    tContent.subjects[data.subject as keyof typeof tContent.subjects] ??
+    data.subject;
+
+  const levelLabel =
+    tContent.levels[data.level as keyof typeof tContent.levels] ?? data.level;
+
+  const formattedDate = new Date(data.generation_datetime).toLocaleDateString(
+    langKey,
+    { year: "numeric", month: "long", day: "numeric" }
+  );
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
       <div
@@ -160,11 +179,10 @@ export default function ReflectionPreviewModal({
         {/* Header */}
         <h1 className="text-2xl font-bold text-gray-900 mb-1">{data.topic}</h1>
         <p className="text-gray-500 text-sm mb-1">
-          {data.subject} – {data.level}
+          {subjectLabel} – {levelLabel}
         </p>
-        <p className="text-gray-400 text-xs mb-6">
-          {new Date(data.generation_datetime).toLocaleDateString()}
-        </p>
+        <p className="text-gray-400 text-xs mb-6">{formattedDate}</p>
+
         <hr className="my-4 text-[#E2E2E2]" />
         <div className="flex justify-end items-center gap-2 mb-6">
           <button
@@ -191,17 +209,21 @@ export default function ReflectionPreviewModal({
         {/* Reflection Question */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-2">
-            {t.reflection_question_label || "Reflection Question"}
+            {tContent.reflection_question_label ??
+              (contentLanguage === "French"
+                ? "Question de réflexion"
+                : "Reflection Question")}
           </h2>
+
           <p className="text-gray-700 leading-relaxed">
-            {data.reflection_question}
+            <MathText content={data.reflection_question} />
           </p>
         </div>
 
         {!data.submitted ? (
           <p className="italic text-center text-gray-500 py-6">
-            {language === "fr"
-              ? "La réflexion n’a pas encore été soumise."
+            {contentLanguage === "French"
+              ? "Cette réflexion n’a pas encore été soumise."
               : "This reflection was not submitted yet."}
           </p>
         ) : (
@@ -209,7 +231,9 @@ export default function ReflectionPreviewModal({
             {/* User Answer */}
             <div className="mb-8">
               <h3 className="text-sm font-medium text-gray-600 mb-1">
-                {language === "fr" ? "Votre réponse" : "Your Response"}
+                {contentLanguage === "French"
+                  ? "Votre réponse"
+                  : "Your Response"}
               </h3>
               <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 text-gray-800 whitespace-pre-wrap">
                 {data.user_reflection_answer}
@@ -219,10 +243,14 @@ export default function ReflectionPreviewModal({
             {/* AI Feedback */}
             <div className="mt-8">
               <h3 className="text-sm font-medium text-green-700 mb-1">
-                {language === "fr" ? "Retour d’IA" : "AI Feedback"}
+                {contentLanguage === "French" ? "Retour d’IA" : "AI Feedback"}
               </h3>
               <div className="bg-green-100 border border-green-300 text-green-800 rounded-lg p-3 text-sm whitespace-pre-wrap">
-                {data.reflection_model_feedback}
+                {data.reflection_model_feedback ? (
+                  <MathText content={data.reflection_model_feedback} />
+                ) : (
+                  <span>No feedback.</span>
+                )}
               </div>
             </div>
           </>

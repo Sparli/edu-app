@@ -37,6 +37,17 @@ export default function QuickGenerate() {
     user_datetime: new Date().toISOString(), // ✅ Required field
   });
 
+  // Map form.language (labels) → translation code; fallback to UI language code
+  const toLangCode = (val?: string) =>
+    val === "English"
+      ? "en"
+      : val === "French"
+      ? "fr"
+      : (language as "en" | "fr");
+
+  // Use content language for field option labels (independent of UI)
+  const tContent = translations[toLangCode(form.language)] || t;
+
   // local errors for each field
   const [errors, setErrors] = useState<
     Partial<Record<keyof GenerateRequest, string>>
@@ -191,13 +202,13 @@ export default function QuickGenerate() {
         <CustomDropdown
           label={t.generate_level_label}
           options={[
-            { label: t.levels.Primary, value: "Primary" },
-            { label: t.levels.Secondary, value: "Secondary" },
+            { label: tContent.levels.Primary, value: "Primary" },
+            { label: tContent.levels.Secondary, value: "Secondary" },
           ]}
           selected={
             form.level
-              ? t.levels[form.level] // 🪄 this renders "Primaire"/"Primary"
-              : t.select_level // 🪄 fallback label: "Sélectionner le niveau"
+              ? tContent.levels[form.level] // content-language label
+              : t.select_level // fallback stays in UI language
           }
           onSelect={(val) => {
             setForm({ ...form, level: val as Level });
@@ -225,8 +236,11 @@ export default function QuickGenerate() {
           >
             <span>
               {form.subject
-                ? t.subjects[form.subject as keyof typeof t.subjects]
-                : t.select_subject}
+                ? tContent.subjects[
+                    form.subject as keyof typeof tContent.subjects
+                  ]
+                : t.select_subject}{" "}
+              {/* placeholder still in UI language */}
             </span>
 
             <svg
@@ -267,8 +281,8 @@ export default function QuickGenerate() {
                       }`}
                     >
                       {
-                        t.subjectGroups[
-                          group.label as keyof typeof t.subjectGroups
+                        tContent.subjectGroups[
+                          group.label as keyof typeof tContent.subjectGroups
                         ]
                       }
                     </span>
@@ -300,7 +314,12 @@ export default function QuickGenerate() {
                             setExpandedGroupIdx(null);
                           }}
                         >
-                          • {t.subjects[subj as keyof typeof t.subjects]}
+                          •{" "}
+                          {
+                            tContent.subjects[
+                              subj as keyof typeof tContent.subjects
+                            ]
+                          }
                         </div>
                       ))}
                     </div>
@@ -320,13 +339,16 @@ export default function QuickGenerate() {
         {/* Custom Difficulty Dropdown */}
         <CustomDropdown
           options={[
-            { label: t.difficulties.Beginner, value: "Beginner" },
-            { label: t.difficulties.Intermediate, value: "Intermediate" },
+            { label: tContent.difficulties.Beginner, value: "Beginner" },
+            {
+              label: tContent.difficulties.Intermediate,
+              value: "Intermediate",
+            },
             {
               value: "Advanced",
               label: (
                 <div className="flex justify-between items-center w-full pr-2">
-                  <span>{t.difficulties.Advanced}</span>
+                  <span>{tContent.difficulties.Advanced}</span>
                   {!profile?.is_subscribed && (
                     <FaCrown className="text-yellow-500 text-xl" />
                   )}
@@ -336,8 +358,8 @@ export default function QuickGenerate() {
           ]}
           selected={
             form.difficulty
-              ? t.difficulties[form.difficulty]
-              : t.select_difficulty
+              ? tContent.difficulties[form.difficulty]
+              : t.select_difficulty // fallback stays in UI language
           }
           onSelect={(val) => {
             const selectedKey = val as Difficulty;
@@ -364,7 +386,7 @@ export default function QuickGenerate() {
           <div className="bg-white p-2 border border-gray-300 rounded-lg">
             <input
               type="text"
-              placeholder={t.quick_enter_topic}
+              placeholder={tContent.quick_enter_topic}
               value={form.topic}
               onChange={(e) => {
                 if (e.target.value.length <= 150) {

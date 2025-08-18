@@ -40,10 +40,7 @@ export default function ProductGuidelinePage() {
       question: t.product_faq_8_question,
       answer: t.product_faq_8_answer,
     },
-    {
-      question: t.product_faq_9_question,
-      answer: t.product_faq_9_answer,
-    },
+
     {
       question: t.product_faq_10_question,
       answer: t.product_faq_10_answer,

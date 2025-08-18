@@ -44,7 +44,7 @@ const HelpCenter = () => {
         <p className="text-xl text-gray-500">{t.helpSubtitle}</p>
       </div>
 
-      <div className="grid lg:grid-cols-3 grid-cols-1 gap-6 lg:min-w-[550px] lg:min-h-[500px] mb-10">
+      <div className="grid lg:grid-cols-3 grid-cols-1 gap-6 lg:min-w-[550px] lg:min-h-[500px] mb-10 ">
         {features.map((feature, idx) => {
           const isActive = activeCardIndex === idx;
 
@@ -66,7 +66,7 @@ const HelpCenter = () => {
                 }}
                 className={`
   w-full h-full min-h-[420px] lg:min-h-[auto] 
-  rounded-[18px] text-center flex flex-col items-center transition focus:outline-none
+  rounded-[18px] text-center flex flex-col items-center transition focus:outline-none cursor-pointer
   ${isActive ? "bg-[#DAE9FF]" : `${feature.bg}`}
 `}
               >

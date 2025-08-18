@@ -252,6 +252,7 @@ export default function QuizModal({
   const langKey = language.toLowerCase().startsWith("fr") ? "fr" : "en";
 
   const t = translations[langKey];
+  const contentLocale = langKey;
 
   const hasSubmitted = !!result;
   const mcqDetails = result?.details?.mcqs ?? [];
@@ -282,16 +283,18 @@ export default function QuizModal({
           </h1>
 
           <p className="text-gray-500 mt-2">
-            {subject} - {level}
+            {t.subjects[subject]} - {t.levels[level]}
           </p>
+
           <p className="text-gray-400 text-sm">
             {t.modal_generated_on}{" "}
-            {generatedAt.toLocaleDateString(undefined, {
+            {generatedAt.toLocaleDateString(contentLocale, {
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
           </p>
+
           <hr className="my-10 text-[#E2E2E2]" />
         </div>
 

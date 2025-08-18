@@ -27,7 +27,6 @@ interface Props {
 }
 
 export default function Generate({ onGenerate, initialData, loading }: Props) {
-  console.log("[Generate] mounted");
   const [form, setForm] = useState<GenerateRequest>({
     subject: initialData?.subject || "Mathematics",
     level: initialData?.level || "Primary",
@@ -75,6 +74,16 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
   const t = translations[language];
   const router = useRouter();
 
+  // 2) (after ^ and after the form state) content-language helpers
+  const toLangCode = (val?: string) =>
+    val === "English"
+      ? "en"
+      : val === "French"
+      ? "fr"
+      : (language as "en" | "fr");
+
+  const tContent = translations[toLangCode(form.language)] || t;
+
   // 🔁 Reverse maps to convert French back to English before sending to backend
   const reverseLevelMap = Object.entries(translations.en.levels).reduce(
     (acc, [key, val]) => {
@@ -111,9 +120,7 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
 
   // Refs for each dropdown
   const subjectMenuRef = useRef<HTMLDivElement | null>(null);
-  const levelMenuRef = useRef<HTMLDivElement | null>(null);
-  const difficultyMenuRef = useRef<HTMLDivElement | null>(null);
-  const languageMenuRef = useRef<HTMLDivElement | null>(null);
+
   // loading spinner
   const handleClick = async () => {
     if (clickLocked.current || !validateForm()) return;
@@ -123,13 +130,13 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       clearQuizSubmission();
       const translatedForm: GenerateRequest = {
         ...form,
-        subject: (language === "fr"
+        subject: (form.language === "French"
           ? reverseSubjectMap[form.subject]
           : form.subject) as Subject,
-        level: (language === "fr"
+        level: (form.language === "French"
           ? reverseLevelMap[form.level]
           : form.level) as Level,
-        difficulty: (language === "fr"
+        difficulty: (form.language === "French"
           ? reverseDifficultyMap[form.difficulty]
           : form.difficulty) as Difficulty,
       };
@@ -160,34 +167,21 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const trigger = document.getElementById("subject-dropdown-trigger");
-
       if (
+        isSubjectMenuOpen &&
         subjectMenuRef.current &&
         !subjectMenuRef.current.contains(e.target as Node) &&
         trigger &&
         !trigger.contains(e.target as Node)
       ) {
         setIsSubjectMenuOpen(false);
+        setExpandedGroupIdx(null);
       }
-
-      if (
-        levelMenuRef.current &&
-        !levelMenuRef.current.contains(e.target as Node)
-      )
-        if (
-          difficultyMenuRef.current &&
-          !difficultyMenuRef.current.contains(e.target as Node)
-        )
-          if (
-            languageMenuRef.current &&
-            !languageMenuRef.current.contains(e.target as Node)
-          ) {
-          }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isSubjectMenuOpen]);
 
   // Subject groups (unchanged)
   const subjectGroups = [
@@ -215,7 +209,6 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       ],
     },
   ];
-  const levelOptions = ["Primary", "Secondary"];
 
   return (
     <div className="bg-[#AB79FF1A] lg:bg-[#F7F9FC] p-6 rounded-xl shadow-lg w-full max-w-xl">
@@ -251,20 +244,18 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       {/* Custom Level Dropdown */}
       <LabalDropdown
         label={t.generate_level_label}
-        options={levelOptions.map((lvl) => t.levels[lvl as Level])}
+        options={[
+          { label: tContent.levels.Primary, value: "Primary" },
+          { label: tContent.levels.Secondary, value: "Secondary" },
+        ]}
         selected={
           form.level
-            ? t.levels[form.level]
-            : t.select_level /* fallback label */
+            ? tContent.levels[form.level] // content-language label
+            : t.select_level // fallback stays in UI language
         }
         onSelect={(val) => {
-          const found = Object.entries(t.levels).find(([, v]) => v === val);
-          if (found) {
-            setForm({ ...form, level: found[0] as Level });
-
-            // 🔄 clear field-level error once a valid level is chosen
-            setErrors((e) => ({ ...e, level: undefined }));
-          }
+          setForm({ ...form, level: val as Level });
+          setErrors((e) => ({ ...e, level: undefined }));
         }}
         className="mb-2"
         error={errors.level}
@@ -293,8 +284,11 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
           <span>
             {/* fallback label when empty */}
             {form.subject
-              ? t.subjects[form.subject as keyof typeof t.subjects]
-              : t.select_subject}
+              ? tContent.subjects[
+                  form.subject as keyof typeof tContent.subjects
+                ]
+              : t.select_subject}{" "}
+            {/* placeholder stays in UI language */}
           </span>
 
           {/* Chevron icon */}
@@ -336,8 +330,8 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
                     }`}
                   >
                     {
-                      t.subjectGroups[
-                        group.label as keyof typeof t.subjectGroups
+                      tContent.subjectGroups[
+                        group.label as keyof typeof tContent.subjectGroups
                       ]
                     }
                   </span>
@@ -369,7 +363,12 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
                           setExpandedGroupIdx(null);
                         }}
                       >
-                        • {t.subjects[subj as keyof typeof t.subjects]}
+                        •{" "}
+                        {
+                          tContent.subjects[
+                            subj as keyof typeof tContent.subjects
+                          ]
+                        }
                       </div>
                     ))}
                   </div>
@@ -389,13 +388,13 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
       <LabalDropdown
         label={t.generate_difficulty_label}
         options={[
-          { label: t.difficulties.Beginner, value: "Beginner" },
-          { label: t.difficulties.Intermediate, value: "Intermediate" },
+          { label: tContent.difficulties.Beginner, value: "Beginner" },
+          { label: tContent.difficulties.Intermediate, value: "Intermediate" },
           {
             value: "Advanced",
             label: (
               <div className="flex justify-between items-center w-full pr-2">
-                <span>{t.difficulties.Advanced}</span>
+                <span>{tContent.difficulties.Advanced}</span>
                 {!profile?.is_subscribed && (
                   <FaCrown className="text-yellow-500 text-xl" />
                 )}
@@ -403,7 +402,7 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
             ),
           },
         ]}
-        selected={t.difficulties[form.difficulty]}
+        selected={tContent.difficulties[form.difficulty]}
         onSelect={(val) => {
           const selectedKey = val as Difficulty;
 
@@ -431,7 +430,7 @@ export default function Generate({ onGenerate, initialData, loading }: Props) {
         </label>
         <textarea
           rows={2}
-          placeholder={t.topic_placeholder}
+          placeholder={tContent.topic_placeholder}
           value={form.topic}
           onChange={(e) => {
             if (e.target.value.length <= 150) {

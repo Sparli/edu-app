@@ -20,14 +20,12 @@ interface Props {
 interface LessonData {
   id: number;
   topic: string;
-  subject: string;
-  level: string;
+  subject: string; // English key or label
+  level: string; // "Primary" | "Secondary" (key)
   difficulty: string;
   generation_datetime: string;
-  lesson?: {
-    heading: string;
-    content: string;
-  }[];
+  language?: "English" | "French"; // 🔹 use content language if API returns it
+  lesson?: { heading: string; content: string }[];
 }
 
 export default function LessonModal({ lessonId, onClose }: Props) {
@@ -93,6 +91,18 @@ export default function LessonModal({ lessonId, onClose }: Props) {
 
   if (!lessonData) return null;
 
+  const contentLangCode = lessonData.language === "French" ? "fr" : "en";
+  const tContent = translations[contentLangCode];
+
+  // Safe fallbacks in case backend returns display labels instead of keys
+  const subjectLabel =
+    tContent.subjects[lessonData.subject as keyof typeof tContent.subjects] ??
+    lessonData.subject;
+
+  const levelLabel =
+    tContent.levels[lessonData.level as keyof typeof tContent.levels] ??
+    lessonData.level;
+
   return (
     <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex justify-center items-center px-4">
       <div
@@ -120,16 +130,17 @@ export default function LessonModal({ lessonId, onClose }: Props) {
 
             <div className="lg:text-lg text-gray-600">
               <p>
-                <strong>{t.lesson_modal.subject}:</strong>{" "}
-                {t.subjects[lessonData.subject as keyof typeof t.subjects]}
+                <strong>{tContent.lesson_modal.subject}:</strong> {subjectLabel}
               </p>
               <p>
-                <strong>{t.lesson_modal.level}:</strong>{" "}
-                {t.levels[lessonData.level as keyof typeof t.levels]}
+                <strong>{tContent.lesson_modal.level}:</strong> {levelLabel}
               </p>
               <p>
-                <strong>{t.lesson_modal.generated_on}:</strong>{" "}
-                {new Date(lessonData.generation_datetime).toLocaleDateString()}
+                <strong>{tContent.lesson_modal.generated_on}:</strong>{" "}
+                {new Date(lessonData.generation_datetime).toLocaleDateString(
+                  contentLangCode,
+                  { year: "numeric", month: "long", day: "numeric" }
+                )}
               </p>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BsSearch } from "react-icons/bs";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
+import { useRouter } from "next/navigation";
 
 interface FAQ {
   question: string;
@@ -26,6 +27,7 @@ export default function FAQPage({
   const { language } = useLanguage();
   const t = translations[language];
   const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
   const filteredFaqs = faqs.filter(
     (faq) =>
@@ -67,13 +69,16 @@ export default function FAQPage({
       </div>
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left visual panel */}
-        <div className="lg:w-1/3 w-full lg:flex flex-col hidden mt-26 items-center">
+        <div
+          className="lg:w-1/3 w-full lg:flex flex-col hidden mt-26 items-center cursor-pointer"
+          onClick={() => router.push("/help")}
+        >
           <Image
             src="/images/help-center.svg"
             alt="Help Bubble"
             width={300}
             height={300}
-            className="object-contain mb-4 "
+            className="object-contain mb-4"
           />
           <h3 className="font-bold text-gray-800 text-xl lg:text-[28px]">
             {t.faq_sidebar_title}

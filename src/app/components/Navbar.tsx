@@ -71,7 +71,7 @@ const Navbar = () => {
             />
 
             <span className="text-black mr-4">
-              {language === "en" ? "French" : "Anglais"}
+              {language === "en" ? "English" : "Anglais"}
             </span>
 
             <ToggleSwitch
@@ -249,7 +249,7 @@ const Navbar = () => {
                 className="cursor-pointer ml-3 mr-2"
               />
               <span className="text-black mr-16">
-                {language === "en" ? "French" : "Anglais"}
+                {language === "en" ? "English" : "Anglais"}
               </span>
               <ToggleSwitch
                 enabled={language === "en"}

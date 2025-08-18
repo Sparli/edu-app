@@ -21,7 +21,7 @@ const Sidebar = () => {
   );
 
   return (
-    <div className="w-80 bg-[#FAFAFA] p-6 lg:flex hidden flex-col justify-between border-r border-gray-200">
+    <div className="w-80 bg-[#FAFAFA] p-6 lg:flex hidden overflow-y-auto flex-col justify-between border-r border-gray-200">
       {/* Top Section */}
       <div>
         <div className="flex items-center mb-10 px-4">

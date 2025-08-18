@@ -500,6 +500,7 @@ export default function GeneratedContent({ content, meta, error }: Props) {
           level={meta.level}
           generatedAt={new Date()}
           onClose={() => setShowModal(false)}
+          contentLanguage={meta.language}
         />
       )}
 

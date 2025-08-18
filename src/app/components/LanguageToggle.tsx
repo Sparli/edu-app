@@ -24,7 +24,7 @@ const LanguageToggle = ({ className = "" }: { className?: string }) => {
 
       {/* Static Disabled Language Label */}
       <span className="text-black text-sm">
-        {isEnglish ? "French" : "Anglais"}
+        {isEnglish ? "English" : "Anglais"}
       </span>
 
       {/* Toggle Button */}

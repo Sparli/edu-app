@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   quizId: number;
+  contentLanguage: "English" | "French";
   onClose: () => void;
 }
 
@@ -62,7 +63,11 @@ type QuizDetailResponse = {
   };
 };
 
-export default function QuizPreviewModal({ quizId, onClose }: Props) {
+export default function QuizPreviewModal({
+  quizId,
+  contentLanguage,
+  onClose,
+}: Props) {
   const [data, setData] = useState<QuizDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +78,19 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const { language } = useLanguage();
   const t = translations[language];
-  const qm = t.quiz_modal;
+  // content-language dictionary (EN/FR based on the quiz itself)
+  const langKey = contentLanguage === "French" ? "fr" : "en";
+  const tContent = translations[langKey];
+  const mcqHeading =
+    contentLanguage === "French"
+      ? "Questions à choix multiple"
+      : "Multiple choices question";
+  const TF =
+    contentLanguage === "French"
+      ? { title: "Vrai / Faux", true: "Vrai", false: "Faux" }
+      : { title: "True / False", true: "True", false: "False" };
+  const hintLabel = contentLanguage === "French" ? "Indice" : "Hint";
+
   const { profile } = useProfile();
   const isSubscribed = profile?.is_subscribed === true;
   const [reasonVisible, setReasonVisible] = useState<Record<string, boolean>>(
@@ -185,6 +202,18 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
     );
   }
 
+  const subjectLabel =
+    tContent.subjects[data.subject as keyof typeof tContent.subjects] ??
+    data.subject;
+
+  const levelLabel =
+    tContent.levels[data.level as keyof typeof tContent.levels] ?? data.level;
+
+  const formattedDate = new Date(data.generation_datetime).toLocaleDateString(
+    langKey,
+    { year: "numeric", month: "long", day: "numeric" }
+  );
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
       <div
@@ -200,16 +229,14 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
 
         <h1 className="text-2xl font-bold">{data.topic}</h1>
         <p className="text-gray-500">
-          {data.subject} - {data.level}
+          {subjectLabel} - {levelLabel}
         </p>
-        <p className="text-sm text-gray-400">
-          {new Date(data.generation_datetime).toLocaleDateString()}
-        </p>
+        <p className="text-sm text-gray-400">{formattedDate}</p>
 
         {/* MCQs */}
         <div className="mt-10">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">{qm.mcqs_heading}</h2>
+            <h2 className="text-xl font-semibold">{mcqHeading}</h2>
 
             <button
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-black disabled:opacity-50"
@@ -326,7 +353,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
               </div>
               <>
                 {/* Hint Button (always shown if rationale exists) */}
-                {"rationale" in q && (
+                {!showSelectedOnly && data.submitted && "rationale" in q && (
                   <button
                     onClick={() => {
                       if (!isSubscribed) {
@@ -347,7 +374,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
                       height={20}
                       className="rounded-full border border-cyan-600 hover:border-cyan-700 transition-all duration-200 "
                     />
-                    {language === "fr" ? "Indice" : "Hint"}
+                    {hintLabel}
                   </button>
                 )}
 
@@ -370,7 +397,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
 
         {/* TF */}
         <div className="mt-10">
-          <h2 className="text-xl font-semibold mb-4">True / False</h2>
+          <h2 className="text-xl font-semibold mb-4">{TF.title}</h2>
           {Object.entries(data.quiz?.true_false || {}).map(([key, q], idx) => {
             const userAnswer = q.user_answer;
             const correctAnswer = q.answer;
@@ -383,7 +410,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
                 </p>
 
                 <div className="flex gap-3">
-                  {["True", "False"].map((label, optIdx) => {
+                  {[TF.true, TF.false].map((label, optIdx) => {
                     const isTrue = optIdx === 0;
                     const isCorrect = isTrue === correctAnswer;
                     const isSelected = isTrue === userAnswer;
@@ -434,7 +461,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
                         height={20}
                         className="rounded-full border border-cyan-600 hover:border-cyan-700 transition-all duration-200"
                       />
-                      {language === "fr" ? "Indice" : "Hint"}
+                      {hintLabel}
                     </button>
 
                     {isSubscribed && reasonVisible[key] && q.rationale && (
@@ -465,7 +492,7 @@ export default function QuizPreviewModal({ quizId, onClose }: Props) {
                 {data.result.total.mcqs + data.result.total.true_false}
               </>
             ) : (
-              <span className="italic text-gray-500">
+              <span className="italic text-red-500">
                 {language === "fr"
                   ? "Ce quiz n’a pas encore été soumis."
                   : "This quiz was not submitted yet."}

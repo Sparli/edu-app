@@ -264,33 +264,8 @@ export default function GenerateClient() {
   );
 
   const GeneratedContentSkeleton = () => (
-    <div className="bg-[#F7F9FC] p-4 rounded-xl shadow-md w-full lg:min-w-[850px] h-full animate-pulse space-y-4">
-      <div className="hidden md:flex gap-4 mb-4">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="h-28 w-[110px] bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center space-y-2"
-          >
-            <div className="h-[40px] w-[40px] bg-gray-300 rounded-full mb-8" />
-            <div className="h-3 w-3/4 bg-gray-300 rounded" />
-          </div>
-        ))}
-      </div>
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm h-130 lg:w-[800px]  flex flex-col justify-between space-y-4">
-        <div className="space-y-2">
-          <div className="h-5 w-1/4 bg-gray-300 rounded mb-6" />
-          <div className="h-4 w-full bg-gray-200 rounded" />
-          <div className="h-4 w-11/12 bg-gray-200 rounded" />
-          <div className="h-4 w-full bg-gray-200 rounded" />
-          <div className="h-4 w-10/12 bg-gray-200 rounded" />
-          <div className="h-4 w-11/12 bg-gray-200 rounded" />
-          <div className="h-4 w-full bg-gray-200 rounded" />
-          <div className="h-4 w-10/12 bg-gray-200 rounded mt-10" />
-        </div>
-        <div className="flex justify-end gap-3 pt-4">
-          <div className="h-10 w-20 bg-gray-300 rounded" />
-        </div>
-      </div>
+    <div className="bg-[#F7F9FC] p-4 rounded-xl shadow-md w-full lg:min-w-[850px] h-full animate-pulse flex items-center justify-center">
+      <div className="animate-spin h-10 w-10 rounded-full border-t-4 border-cyan-500 border-opacity-60" />
     </div>
   );
 

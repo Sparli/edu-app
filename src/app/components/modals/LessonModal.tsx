@@ -19,6 +19,7 @@ interface Props {
   level: Level;
   generatedAt: Date;
   onClose: () => void;
+  contentLanguage: "English" | "French";
 }
 
 export default function LessonModal({
@@ -28,6 +29,7 @@ export default function LessonModal({
   level,
   generatedAt,
   onClose,
+  contentLanguage,
 }: Props) {
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>("");
@@ -37,6 +39,9 @@ export default function LessonModal({
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
+  const tContent = translations[contentLanguage === "French" ? "fr" : "en"];
+  const contentLocale = contentLanguage === "French" ? "fr" : "en";
+
   const [copied, setCopied] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -98,11 +103,12 @@ export default function LessonModal({
             </h1>
 
             <p className="text-gray-500 mt-2">
-              {subject} - {level}
+              {tContent.subjects[subject]} - {tContent.levels[level]}
             </p>
+
             <p className="text-gray-400 text-sm">
-              {t.modal_generated_on}{" "}
-              {generatedAt.toLocaleDateString(undefined, {
+              {tContent.modal_generated_on}{" "}
+              {generatedAt.toLocaleDateString(contentLocale, {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
