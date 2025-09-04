@@ -184,7 +184,51 @@ no_content_subtitle: "Commencez par générer des leçons pour les voir ici.",
   premium_sneak_peek: "Aperçu rapide",
   premium_subtext: "Déverrouillez des fonctionnalités supplémentaires et des outils d’apprentissage plus intelligents — bientôt disponible !",
   premium_upgrade_btn: "Passer à Premium",
-premium_already_subscribed: "Déjà Abonné",
+  premium_already_subscribed: "Déjà Abonné",
+  
+  // Premium section translations
+  premium_free_plan: "Forfait Gratuit",
+  premium_yearly_plan: "Forfait Annuel",
+  premium_monthly: "/mois",
+  premium_billed_annually: "(Facturé Annuellement)",
+  premium_save_20: "Économisez 20%",
+  
+  // Feature translations
+  premium_feature_limited_quizzes: "Quiz et tentatives d'entraînement limités",
+  premium_feature_basic_tracking: "Suivi des performances de base",
+  premium_feature_restricted_access: "Accès restreint aux fonctionnalités du tableau de bord",
+  premium_feature_unlimited_quizzes: "Quiz et tentatives d'entraînement illimités",
+  premium_feature_full_access: "Accès complet aux widgets avancés du tableau de bord et aux informations de l'IA",
+  premium_feature_personalized_roadmap: "Feuille de route d'apprentissage personnalisée et analyse des tendances",
+  premium_feature_priority_access: "Accès prioritaire aux nouvelles fonctionnalités et mises à jour",
+  premium_feature_all_premium: "Toutes les fonctionnalités du tableau de bord premium mentionnées",
+  premium_downgrade_btn: "Rétrograder vers le forfait gratuit",
+  premium_loading: "Chargement...",
+  
+  // Pricing page specific translations
+  pricing_title: "Passez à EdulmMersion Premium 🚀",
+  pricing_subtitle: "Déverrouillez des fonctionnalités supplémentaires et des outils d'apprentissage plus intelligents — bientôt disponible !",
+  pricing_monthly: "Mensuel",
+  pricing_yearly: "Annuel",
+  pricing_save_20: "Économisez 20%",
+  pricing_processing: "Traitement...",
+  pricing_subscribe: "S'abonner",
+  
+  // Premium Monthly View translations
+  premium_monthly_greeting: "Bonsoir, {{name}}",
+  premium_monthly_ready: "Prêt pour une autre aventure d'apprentissage géniale.",
+  premium_monthly_valid_till: "Valide jusqu'au {{date}}",
+  premium_monthly_plan_title: "Forfait Premium - Mensuel",
+  premium_monthly_upgrade_btn: "Passer au forfait annuel",
+  premium_monthly_processing: "Traitement...",
+  
+  // Premium Yearly View translations
+  premium_yearly_greeting: "Bonsoir, {{name}}",
+  premium_yearly_ready: "Prêt pour une autre aventure d'apprentissage géniale.",
+  premium_yearly_valid_till: "Valide jusqu'en septembre 2026",
+  premium_yearly_plan_title: "Forfait Premium - Annuel",
+  premium_yearly_downgrade_btn: "Rétrograder vers le forfait gratuit",
+  
   feature_content_title: "Contenu enrichi et captivant",
      feature_content_desc: [
       "Des leçons plus détaillées avec des exemples concrets et des faits amusants",
@@ -710,6 +754,50 @@ no_content_subtitle: "Start by generating some lessons to see them here.",
   premium_subtext: "Unlock extra features and smarter learning tools — coming soon!",
   premium_upgrade_btn: "Upgrade to Premium",
 premium_already_subscribed: "Already Subscribed",
+
+  // Premium section translations
+  premium_free_plan: "Free Plan",
+  premium_yearly_plan: "Yearly Plan",
+  premium_monthly: "/mo",
+  premium_billed_annually: "(Billed Annually)",
+  premium_save_20: "Save 20%",
+  
+  // Feature translations
+  premium_feature_limited_quizzes: "Limited Quizzes & Practice Attempts",
+  premium_feature_basic_tracking: "Basic performance tracking",
+  premium_feature_restricted_access: "Restricted access to dashboard features",
+  premium_feature_unlimited_quizzes: "Unlimited Quizzes & Practice Attempts",
+  premium_feature_full_access: "Full access to advanced dashboard widgets and AI insights",
+  premium_feature_personalized_roadmap: "Personalized learning roadmap and trend analysis",
+  premium_feature_priority_access: "Priority access to new features and updates",
+  premium_feature_all_premium: "All premium dashboard features mentioned",
+  premium_downgrade_btn: "Downgrade to Free Plan",
+  premium_loading: "Loading...",
+  
+  // Pricing page specific translations
+  pricing_title: "Upgrade to EdulmMersion Premium 🚀",
+  pricing_subtitle: "Unlock extra features and smarter learning tools — coming soon!",
+  pricing_monthly: "Monthly",
+  pricing_yearly: "Yearly",
+  pricing_save_20: "Save 20%",
+  pricing_processing: "Processing...",
+  pricing_subscribe: "Subscribe",
+  
+  // Premium Monthly View translations
+  premium_monthly_greeting: "Good Evening, {{name}}",
+  premium_monthly_ready: "Ready for another awesome learning adventure.",
+  premium_monthly_valid_till: "Valid till {{date}}",
+  premium_monthly_plan_title: "Premium Plan - Monthly",
+  premium_monthly_upgrade_btn: "Upgrade to Yearly Plan",
+  premium_monthly_processing: "Processing...",
+  
+  // Premium Yearly View translations
+  premium_yearly_greeting: "Good Evening, {{name}}",
+  premium_yearly_ready: "Ready for another awesome learning adventure.",
+  premium_yearly_valid_till: "Valid till September 2026",
+  premium_yearly_plan_title: "Premium Plan - Yearly",
+  premium_yearly_downgrade_btn: "Downgrade to Free Plan",
+  
   feature_content_title: "Enriched and engaging content",
     feature_content_desc: [
       "More detailed lessons with real-life examples and fun facts",

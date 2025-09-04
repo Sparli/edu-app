@@ -44,8 +44,8 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Desktop Navbar */}
-      <header className="hidden lg:flex mt-1 w-full items-center justify-between px-6 py-4 bg-white ">
+      {/* Desktop & Tablet Navbar */}
+      <header className="hidden md:flex mt-1 w-full items-center justify-between px-6 py-4 bg-white ">
         {/* Logo */}
         <div className="flex items-center space-x-2">
           <Link href="/dashboard">
@@ -125,7 +125,7 @@ const Navbar = () => {
       />
 
       {/* Mobile Navbar */}
-      <header className="md:hidden w-[350px] mx-auto mt-2 flex items-center justify-between px-6 py-5 bg-[#DAE9FF] rounded-4xl">
+      <header className="sm:hidden w-[350px] mx-auto mt-2 flex items-center justify-between px-6 py-5 bg-[#DAE9FF] rounded-4xl">
         <div className="flex items-center space-x-2">
           <Link href="/dashboard">
             <Image
