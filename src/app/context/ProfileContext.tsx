@@ -7,15 +7,17 @@ export interface Profile {
   last_name: string;
   email: string;
   is_subscribed: boolean;
-  profile_image?: string;
+  profile_image?: string | null;
   subscription_status?: string;
   daily_quota_used?: number;
   daily_quota_limit?: number;
   daily_quota_date?: string | null;
-
-  // ✅ Add here:
   gender?: "male" | "female";
   first_visit?: boolean;
+  subscription_valid_from?: string;
+  subscription_valid_until?: string;
+  cancel_at_period_end?: boolean;
+  plan_id?: string;
 }
 
 type ProfileContextType = {

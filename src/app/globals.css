@@ -106,3 +106,9 @@ html, body {
   background: #04C0F2; /* your brand color */
   height: 3px;
 }
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

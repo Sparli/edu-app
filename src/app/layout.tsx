@@ -24,7 +24,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "EdulmMersion",
+  title: "EduimMersion",
   description: "A platform for immersive learning",
   icons: {
     icon: "images/favicon.svg",

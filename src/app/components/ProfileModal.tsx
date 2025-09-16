@@ -94,26 +94,42 @@ const ProfileModal = ({
       setUpdated(true);
       setTimeout(() => {
         setProfile((prev) => {
-          if (!prev) return data.profile;
-          return { ...prev, ...data.profile };
+          if (!prev) return data.profile || data;
+          return { ...prev, ...(data.profile || data) };
         });
       }, 100);
 
       setTimeout(() => setUpdated(false), 3000);
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.errors) {
-        const errors = err.response.data.errors;
-        const fullError = Object.entries(errors)
-          .map(([key, val]) => `${key}: ${val}`)
-          .join("\n");
-        alert(`Update failed:\n${fullError}`);
+      if (axios.isAxiosError(err)) {
+        // Handle different error response formats
+        if (err.response?.data?.errors) {
+          const errors = err.response.data.errors;
+          const fullError = Object.entries(errors)
+            .map(([key, val]) => `${key}: ${val}`)
+            .join("\n");
+          alert(`Update failed:\n${fullError}`);
+        } else if (err.response?.data?.error) {
+          alert(`Update failed: ${err.response.data.error}`);
+        } else if (err.response?.data?.message) {
+          alert(`Update failed: ${err.response.data.message}`);
+        } else if (err.response?.status === 400) {
+          alert("Invalid data provided. Please check your inputs.");
+        } else if (err.response?.status === 401) {
+          alert("Session expired. Please log in again.");
+        } else if (err.response?.status === 403) {
+          alert("You don't have permission to perform this action.");
+        } else if (err.response?.status === 500) {
+          alert("Server error. Please try again later.");
+        } else {
+          alert(`Update failed: ${err.response?.statusText || err.message}`);
+        }
       } else {
-        alert("Something went wrong.");
+        alert("Something went wrong. Please try again.");
       }
     }
   };
 
-  // ghwal ghapar
   const handleRemove = async () => {
     const formData = new FormData();
     formData.append("remove_image", "true");
@@ -126,29 +142,46 @@ const ProfileModal = ({
       });
 
       const data = res.data;
-      // setUpdated(true);
       setUpdated(true);
       setTimeout(() => {
         setProfile((prev) => {
-          if (!prev) return data.profile;
-          return { ...prev, ...data.profile };
+          if (!prev) return data.profile || data;
+          return { ...prev, ...(data.profile || data) };
         });
       }, 100);
 
       setImageFile(null);
       setPreview(null);
       setRemoveImage(true); // ✅ Set the flag now
-      // setTimeout(() => setUpdated(false), 3000);
       setManuallyUpdatedImage(false); // reset override blocker after save
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.errors) {
-        const errors = err.response.data.errors;
-        const fullError = Object.entries(errors)
-          .map(([key, val]) => `${key}: ${val}`)
-          .join("\n");
-        alert(`Update failed:\n${fullError}`);
+      if (axios.isAxiosError(err)) {
+        // Handle different error response formats
+        if (err.response?.data?.errors) {
+          const errors = err.response.data.errors;
+          const fullError = Object.entries(errors)
+            .map(([key, val]) => `${key}: ${val}`)
+            .join("\n");
+          alert(`Remove image failed:\n${fullError}`);
+        } else if (err.response?.data?.error) {
+          alert(`Remove image failed: ${err.response.data.error}`);
+        } else if (err.response?.data?.message) {
+          alert(`Remove image failed: ${err.response.data.message}`);
+        } else if (err.response?.status === 400) {
+          alert("Invalid request. Please try again.");
+        } else if (err.response?.status === 401) {
+          alert("Session expired. Please log in again.");
+        } else if (err.response?.status === 403) {
+          alert("You don't have permission to perform this action.");
+        } else if (err.response?.status === 500) {
+          alert("Server error. Please try again later.");
+        } else {
+          alert(
+            `Remove image failed: ${err.response?.statusText || err.message}`
+          );
+        }
       } else {
-        alert("Something went wrong.");
+        alert("Something went wrong. Please try again.");
       }
     }
   };

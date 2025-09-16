@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import authApi from "../utils/authApi";
 
@@ -13,6 +13,7 @@ import { translations } from "@/app/translations";
 import LanguageToggle from "./LanguageToggle";
 import Dropdown from "@/app/components/dropdown";
 import { AxiosError } from "axios";
+
 
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -45,7 +46,7 @@ const AuthForm = () => {
     { label: t.auth_select_gender, value: "" },
     { label: t.auth_gender_male, value: "Male" },
     { label: t.auth_gender_female, value: "Female" },
-    { label: t.auth_gender_other, value: "Other" },
+    
   ];
 
   // API call
@@ -175,7 +176,7 @@ const AuthForm = () => {
       <div className="lg:hidden w-[390px] mx-auto mt-4 px-6 py-5 flex justify-center bg-[#DAE9FF]  rounded-4xl  z-10">
         <div className="flex items-center space-x-2">
           <Image
-            src="images/logo.svg"
+            src="images/new-logo.svg"
             alt="EduImmersion Logo"
             width={150}
             height={150}
@@ -198,8 +199,8 @@ const AuthForm = () => {
         </div>
         {/* Right Side Form */}
         <div className="flex-1 flex lg:mt-18 mt-6  justify-center bg-white">
-          <div className="hidden lg:block absolute top-6 right-6">
-            <LanguageToggle />
+          <div className="hidden lg:block absolute top-4 right-6">
+          <LanguageDropdown />
           </div>
           <div className="w-80 sm:w-96 space-y-6">
             {/* Toggle Tabs */}
@@ -245,6 +246,7 @@ const AuthForm = () => {
                       placeholder={t.auth_email_placeholder}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                       className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                     />
                     {errors.email && (
@@ -265,6 +267,7 @@ const AuthForm = () => {
                       placeholder={t.auth_password_placeholder}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                       className="w-full p-3 pl-12 rounded-lg bg-[#F6F6F6] focus:outline-none"
                     />
                     {errors.password && (
@@ -556,3 +559,82 @@ const AuthForm = () => {
 };
 
 export default AuthForm;
+
+const LanguageDropdown = ({ mobile = false }: { mobile?: boolean }) => {
+  const { language, setLanguage } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const options: { value: "en" | "fr"; label: string; img: string }[] = [
+    { value: "en", label: "EN", img: "/icons/en.png" },
+    { value: "fr", label: "FR", img: "/icons/fr.png" },
+  ];
+
+  const selected = options.find((o) => o.value === language) ?? options[0];
+
+  return (
+    <div ref={ref} className={`relative ${mobile ? "ml-1" : ""}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 rounded-t-[8px] border border-[#4A4A4A40]/75 bg-white px-2 py-1.5 hover:shadow transition"
+      >
+        <span className="inline-flex items-center justify-center rounded-full bg-white">
+          <Image
+            src={selected.img}
+            alt={selected.label}
+            width={20}
+            height={20}
+            className="rounded-full"
+          />
+        </span>
+        <span className="text-black font-medium text-sm uppercase">
+          {selected.label}
+        </span>
+        <svg
+          className="w-3 h-3 text-black"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute w-[81px] rounded-b-xl bg-white shadow-xl ring-1 ring-gray-200 overflow-hidden z-50">
+          {options
+            .filter((opt) => opt.value !== language)
+            .map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setLanguage(opt.value);
+                  setOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 transition text-gray-800 text-sm"
+              >
+                <Image
+                  src={opt.img}
+                  alt={opt.label}
+                  width={20}
+                  height={20}
+                  className="rounded-full"
+                />
+                <span className="underline">{opt.label}</span>
+              </button>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+};

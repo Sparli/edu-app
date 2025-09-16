@@ -17,7 +17,16 @@ const ChatBot = () => {
 
       try {
         // Get user profile first (for name)
-        const profileRes = await authApi.get("/users/profile/");
+        const timezone =
+          typeof Intl !== "undefined" && typeof Intl.DateTimeFormat === "function"
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone
+            : undefined;
+        const headers: Record<string, string> = {};
+        if (timezone) {
+          headers["X-User-Timezone"] = timezone;
+        }
+
+        const profileRes = await authApi.get("/users/profile/", { headers });
         const profileData = profileRes.data?.profile;
         const firstName = profileData?.first_name || "";
 

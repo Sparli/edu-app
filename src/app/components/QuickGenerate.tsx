@@ -173,7 +173,7 @@ export default function QuickGenerate() {
   return (
     <div
       ref={quickGenerateRef}
-      className="bg-[#AB79FF1A] lg:bg-[#F7F9FC] rounded-2xl p-6 mt-8 min-h-[195.75px]"
+      className="bg-[#FFFFFF] rounded-2xl p-6 mt-8 min-h-[195.75px]"
     >
       <h2 className="text-[22.5px] font-semibold text-[#1F2937] mb-6">
         {t.quick_generate_title}
@@ -224,7 +224,7 @@ export default function QuickGenerate() {
     ${
       errors.subject
         ? "border-red-400 ring-1 ring-red-400"
-        : "border-1 border-gray-300"
+        : "border-1 border-[#4A4A4A40]/75"
     }
   `}
         >
@@ -383,7 +383,7 @@ export default function QuickGenerate() {
 
         {/* Topic Input */}
         <div className="flex flex-col w-full">
-          <div className="bg-white p-2 border border-gray-300 rounded-lg">
+          <div className="bg-white p-2 border border-[#4A4A4A40]/75 rounded-lg">
             <input
               type="text"
               placeholder={tContent.quick_enter_topic}
@@ -409,13 +409,14 @@ export default function QuickGenerate() {
             {form.topic.length}/150
           </p>
         </div>
-
-        {/* Generate Button */}
-        <button
+      </div>
+              {/* Generate Button */}
+              
+              <button
           onClick={handleGenerate}
           disabled={!isFormComplete || isLoading}
           className={`mb-6 w-full lg:w-auto px-8 py-4 rounded-lg font-medium transition
-    flex items-center justify-center gap-2
+    flex items-center justify-center gap-2 mx-auto
     ${
       isFormComplete
         ? "bg-cyan-500 hover:bg-cyan-600 text-white cursor-pointer"
@@ -433,7 +434,6 @@ export default function QuickGenerate() {
             t.quick_generate_button
           )}
         </button>
-      </div>
 
       <UpgradeModal
         visible={showPremiumModal}

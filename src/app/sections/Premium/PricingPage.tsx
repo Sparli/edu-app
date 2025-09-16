@@ -1,8 +1,13 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useProfile } from "@/app/context/ProfileContext";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/app/translations";
+import {
+  getPlanDetails,
+  Plan,
+  createCheckoutSession,
+} from "@/app/utils/subscriptionApi";
 
 // Types
 interface PlanFeature {
@@ -27,10 +32,69 @@ const PricingPage: React.FC = () => {
   const { language } = useLanguage();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("yearly");
   const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [fetchingPlan, setFetchingPlan] = useState(false);
 
   const t = translations[language];
 
-  // Dummy pricing data based on screenshots
+  // Fetch plan details on component mount
+  useEffect(() => {
+    const fetchPlan = async () => {
+      setFetchingPlan(true);
+      try {
+        const response = await getPlanDetails();
+        if (response.success) {
+          setPlan(response.plan);
+        }
+      } catch (error) {
+        console.error("Failed to fetch plan details:", error);
+        // Fallback to yearly on error
+        try {
+          const fallbackResponse = await getPlanDetails("yearly");
+          if (fallbackResponse.success) {
+            setPlan(fallbackResponse.plan);
+            setBillingPeriod("yearly");
+          }
+        } catch (fallbackError) {
+          console.error("Fallback plan fetch failed:", fallbackError);
+        }
+      } finally {
+        setFetchingPlan(false);
+      }
+    };
+
+    fetchPlan();
+  }, []);
+
+  // Fetch plan details when billing period changes
+  const fetchPlanForPeriod = async (period: BillingPeriod) => {
+    setFetchingPlan(true);
+    try {
+      const response = await getPlanDetails(period);
+      if (response.success) {
+        setPlan(response.plan);
+      }
+    } catch (error) {
+      console.error("Failed to fetch plan details:", error);
+      // Fallback to yearly on error
+      try {
+        const fallbackResponse = await getPlanDetails("yearly");
+        if (fallbackResponse.success) {
+          setPlan(fallbackResponse.plan);
+          setBillingPeriod("yearly");
+        }
+      } catch (fallbackError) {
+        console.error("Fallback plan fetch failed:", fallbackError);
+      }
+    } finally {
+      // Add 1 second delay to show loading state
+      setTimeout(() => {
+        setFetchingPlan(false);
+      }, 1000);
+    }
+  };
+
+  // Dynamic pricing data based on API response
   const pricingPlans: PricingPlan[] = [
     {
       id: "free",
@@ -46,10 +110,20 @@ const PricingPage: React.FC = () => {
     {
       id: "premium",
       name: t.premium_yearly_plan,
-      price: billingPeriod === "monthly" ? "$2.99" : "$2.49",
+      price: fetchingPlan
+        ? "..."
+        : plan
+        ? billingPeriod === "monthly"
+          ? `$${plan.price}`
+          : `$${plan.cost_per_month}`
+        : billingPeriod === "monthly"
+        ? "$2.99"
+        : "$2.49",
       originalPrice:
-        billingPeriod === "yearly"
-          ? `$29.99 ${language === "fr" ? "" : t.premium_billed_annually}`
+        plan && billingPeriod === "yearly"
+          ? `$${plan.price} ${
+              language === "fr" ? "" : t.premium_billed_annually
+            }`
           : undefined,
       billing: t.premium_monthly,
       features: [
@@ -75,35 +149,44 @@ const PricingPage: React.FC = () => {
   const handleSubscribe = useCallback(
     async (planType: "free" | "premium") => {
       if (planType === "free") {
-        // Handle free plan selection
+        // Handle free plan selection - just update local state
         setProfile((prev) =>
-          prev ? { ...prev, subscription_status: "free" } : null
+          prev
+            ? { ...prev, subscription_status: "free", is_subscribed: false }
+            : null
         );
         return;
       }
 
+      // Handle premium plan subscription
       setLoading(true);
 
-      // Simulate API call delay
-      setTimeout(() => {
-        // Update profile with subscription status for testing
-        setProfile((prev) =>
-          prev
-            ? {
-                ...prev,
-                subscription_status: billingPeriod,
-                is_subscribed: true,
-              }
-            : null
-        );
+      try {
+        // Create Stripe checkout session
+        const response = await createCheckoutSession(billingPeriod);
+
+        if (response.success && response.checkout_url) {
+          // Redirect to Stripe checkout
+          window.location.href = response.checkout_url;
+        } else {
+          throw new Error(
+            response.error || "Failed to create checkout session"
+          );
+        }
+      } catch (error) {
+        console.error("Subscription error:", error);
+        // You might want to show an error message to the user here
+        alert("Failed to start subscription process. Please try again.");
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     },
     [billingPeriod, setProfile]
   );
 
   const handleBillingToggle = useCallback((period: BillingPeriod) => {
     setBillingPeriod(period);
+    fetchPlanForPeriod(period);
   }, []);
 
   return (
@@ -123,23 +206,33 @@ const PricingPage: React.FC = () => {
         <div className="bg-[#4A4A4A1A]/90 border-1 border-[#191818] rounded-full py-[6px] px-[12px] sm:py-[8px] sm:px-[16px] flex">
           <button
             onClick={() => handleBillingToggle("monthly")}
-            className={`px-[16px] py-1.5 sm:px-[26px] sm:py-2 rounded-full text-sm sm:text-lg transition-all ${
+            disabled={fetchingPlan}
+            className={`px-[16px] py-1.5 sm:px-[26px] sm:py-2 rounded-full text-sm sm:text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
               billingPeriod === "monthly"
                 ? "bg-[#23BAD8] text-white font-bold"
                 : "text-[#191818] hover:text-gray-800 font-medium"
             }`}
           >
-            {t.pricing_monthly}
+            {fetchingPlan && billingPeriod === "monthly" ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              t.pricing_monthly
+            )}
           </button>
           <button
             onClick={() => handleBillingToggle("yearly")}
-            className={`px-4 py-1.5 sm:px-6 sm:py-2 rounded-full text-sm sm:text-lg transition-all ${
+            disabled={fetchingPlan}
+            className={`px-4 py-1.5 sm:px-6 sm:py-2 rounded-full text-sm sm:text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
               billingPeriod === "yearly"
                 ? "bg-[#23BAD8] text-white font-bold"
                 : "text-[#191818] hover:text-gray-800 font-medium"
             }`}
           >
-            {t.pricing_yearly}
+            {fetchingPlan && billingPeriod === "yearly" ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              t.pricing_yearly
+            )}
           </button>
         </div>
       </div>
@@ -155,6 +248,12 @@ const PricingPage: React.FC = () => {
                 : "border-gray-200 lg:mt-[158px] md:h-[415px] md:max-w-[436px]"
             }`}
           >
+            {/* Subtle Loading Indicator for Premium Plan Only */}
+            {plan.id === "premium" && fetchingPlan && (
+              <div className="absolute top-4 right-4 z-10">
+                <div className="w-4 h-4 border-2 border-[#23BAD8] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
             {/* Popular Badge */}
             {plan.isPopular && billingPeriod === "yearly" && (
               <div className="absolute -top-4 sm:-top-7 left-1/2 transform -translate-x-1/2 mb-[28px]">
@@ -183,7 +282,15 @@ const PricingPage: React.FC = () => {
                   {plan.name}
                 </h3>
                 {plan.originalPrice && (
-                  <p className="text-xs sm:text-sm">
+                  <p
+                    className={`text-xs sm:text-sm ${
+                      plan.id === "premium"
+                        ? `transition-all duration-300 ${
+                            fetchingPlan ? "opacity-50" : "opacity-100"
+                          }`
+                        : ""
+                    }`}
+                  >
                     <span className="font-extrabold text-[#191818] text-sm sm:text-lg mr-1">
                       {plan.originalPrice?.split(" ")[0]}
                     </span>
@@ -210,10 +317,26 @@ const PricingPage: React.FC = () => {
 
               {/* Price */}
               <div className="flex items-end gap-1">
-                <span className="text-2xl sm:text-3xl md:text-4xl mb-2 font-extrabold text-[#23BAD8]">
+                <span
+                  className={`text-2xl sm:text-3xl md:text-4xl mb-2 font-extrabold text-[#23BAD8] ${
+                    plan.id === "premium"
+                      ? `transition-all duration-300 ${
+                          fetchingPlan ? "opacity-50" : "opacity-100"
+                        }`
+                      : ""
+                  }`}
+                >
                   {plan.price}
                 </span>
-                <span className="text-lg sm:text-xl md:text-[26px] font-medium text-[#191818]">
+                <span
+                  className={`text-lg sm:text-xl md:text-[26px] font-medium text-[#191818] ${
+                    plan.id === "premium"
+                      ? `transition-all duration-300 ${
+                          fetchingPlan ? "opacity-50" : "opacity-100"
+                        }`
+                      : ""
+                  }`}
+                >
                   {plan.billing}
                 </span>
               </div>

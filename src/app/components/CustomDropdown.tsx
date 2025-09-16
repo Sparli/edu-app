@@ -46,10 +46,10 @@ export default function CustomDropdown({
 
   return (
     <div
-      className={`relative p-1 rounded-lg bg-white ${className} ${
+      className={`relative p-1 rounded-[10px] bg-white ${className} ${
         error
           ? "border-red-400 ring-1 ring-red-400"
-          : "border-1 border-gray-300"
+          : "border-1 border-[#4A4A4A40]/75"
       }`}
       ref={menuRef}
     >

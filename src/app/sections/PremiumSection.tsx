@@ -13,16 +13,16 @@ const PremiumSection: React.FC = () => {
       return <PricingPage />;
     }
 
-    // User is subscribed, check subscription type
-    const subscriptionType = profile.subscription_status;
+    // User is subscribed, check plan type
+    const planType = profile.plan_id;
 
-    switch (subscriptionType) {
+    switch (planType) {
       case "monthly":
         return <PremiumMonthlyView />;
       case "yearly":
         return <PremiumYearlyView />;
       default:
-        // Fallback to pricing page if subscription type is unknown
+        // Fallback to pricing page if plan type is unknown
         return <PricingPage />;
     }
   };

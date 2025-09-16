@@ -1,18 +1,54 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useProfile } from "@/app/context/ProfileContext";
 import { translations } from "@/app/translations";
 import { IoIosSend } from "react-icons/io";
 import Image from "next/image";
+import { getUserProfile } from "@/app/utils/getUserProfile";
+import { cancelSubscription } from "@/app/utils/subscriptionApi";
+import CancelSubscriptionModal from "@/app/components/modals/CancelSubscriptionModal";
 
 const PremiumYearlyView: React.FC = () => {
   const { language } = useLanguage();
   const { profile, setProfile } = useProfile();
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const userName = profile?.first_name || "User";
   const t = translations[language];
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!profile) {
+        setProfileLoading(true);
+        try {
+          const profileData = await getUserProfile();
+          if (profileData) {
+            setProfile(profileData);
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile:", error);
+        } finally {
+          setProfileLoading(false);
+        }
+      }
+    };
+    fetchProfile();
+  }, [profile, setProfile]);
+
+  // Format subscription validity date
+  const formatSubscriptionDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString(language === "fr" ? "fr-FR" : "en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   const features = [
     t.premium_feature_unlimited_quizzes,
@@ -22,23 +58,58 @@ const PremiumYearlyView: React.FC = () => {
     t.premium_feature_all_premium,
   ];
 
-  const handleDowngradeToFree = useCallback(async () => {
+  const handleDowngradeToFree = useCallback(() => {
+    setShowCancelModal(true);
+  }, []);
+
+  const handleConfirmCancel = useCallback(async () => {
     setLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              subscription_status: "free",
-              is_subscribed: false,
-            }
-          : null
-      );
+    try {
+      const response = await cancelSubscription();
+
+      if (response.success) {
+        // Update profile context to reflect cancellation
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                subscription_status: "free",
+                is_subscribed: false,
+                subscription_valid_until: response.effective_end,
+              }
+            : null
+        );
+
+        // Show success message
+        const successMessage =
+          language === "fr"
+            ? "Abonnement annulé avec succès. Vous avez maintenant accès au plan gratuit."
+            : "Subscription canceled successfully. You now have access to the free plan.";
+        alert(successMessage);
+
+        // Close modal
+        setShowCancelModal(false);
+      } else {
+        throw new Error(response.error || "Failed to cancel subscription");
+      }
+    } catch (error) {
+      console.error("Cancel subscription error:", error);
+      const errorMessage =
+        language === "fr"
+          ? "Échec de l'annulation de l'abonnement. Veuillez réessayer."
+          : "Failed to cancel subscription. Please try again.";
+      alert(errorMessage);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [setProfile]);
+    }
+  }, [setProfile, language]);
+
+  const handleCloseModal = useCallback(() => {
+    if (!loading) {
+      setShowCancelModal(false);
+    }
+  }, [loading]);
 
   return (
     <div className="w-full mt-8 mb-8">
@@ -75,7 +146,12 @@ const PremiumYearlyView: React.FC = () => {
               opacity: 1,
             }}
           >
-            <span>{t.premium_yearly_valid_till}</span>
+            <span>
+              {t.premium_yearly_valid_till}{" "}
+              {profileLoading
+                ? "..."
+                : formatSubscriptionDate(profile?.subscription_valid_until)}
+            </span>
           </div>
 
           {/* Card Content */}
@@ -135,6 +211,15 @@ const PremiumYearlyView: React.FC = () => {
           <IoIosSend className="w-4 h-4 sm:w-[19px] sm:h-[19px]" />
         </button>
       </div>
+
+      {/* Cancel Subscription Modal */}
+      <CancelSubscriptionModal
+        isOpen={showCancelModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmCancel}
+        loading={loading}
+        language={language}
+      />
     </div>
   );
 };

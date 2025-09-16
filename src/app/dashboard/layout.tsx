@@ -1,13 +1,22 @@
+"use client";
+
 import Sidebar from "@/app/components/Sidebar";
 import Navbar from "@/app/components/Navbar";
+import { useProfile } from "@/app/context/ProfileContext";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { profile } = useProfile();
+
   return (
-    <div className="flex h-screen bg-[#ffffff]">
+    <div
+      className={`flex h-screen ${
+        profile?.is_subscribed ? "bg-[#F5F6FA]" : "bg-[#ffffff]"
+      }`}
+    >
       {/* Sidebar */}
       <Sidebar />
 

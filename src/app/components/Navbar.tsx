@@ -50,7 +50,7 @@ const Navbar = () => {
         <div className="flex items-center space-x-2">
           <Link href="/dashboard">
             <Image
-              src="/images/logo.svg"
+              src="/images/new-logo.svg"
               alt="Logo"
               width={300}
               height={300}
@@ -61,24 +61,7 @@ const Navbar = () => {
 
         {/* Right Side */}
         <div className="flex items-center space-x-6 ">
-          <div className="flex items-center space-x-2">
-            <Image
-              src="/images/lang.png"
-              alt="Language Icon"
-              width={20}
-              height={20}
-              className="cursor-pointer mr-4"
-            />
-
-            <span className="text-black mr-4">
-              {language === "en" ? "English" : "Anglais"}
-            </span>
-
-            <ToggleSwitch
-              enabled={language === "en"}
-              setEnabled={(enabled) => setLanguage(enabled ? "en" : "fr")}
-            />
-          </div>
+          <LanguageDropdown />
 
           {/* Profile Click */}
           <div
@@ -129,7 +112,7 @@ const Navbar = () => {
         <div className="flex items-center space-x-2">
           <Link href="/dashboard">
             <Image
-              src="/images/logo.svg"
+              src="/images/new-logo.svg"
               alt="Logo"
               width={150}
               height={150}
@@ -334,6 +317,85 @@ const NavItem = ({
     >
       <Image src={iconSrc} alt={label} width={20} height={20} />
       <span>{label}</span>
+    </div>
+  );
+};
+
+const LanguageDropdown = ({ mobile = false }: { mobile?: boolean }) => {
+  const { language, setLanguage } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const options: { value: "en" | "fr"; label: string; img: string }[] = [
+    { value: "en", label: "ENGLISH", img: "/icons/en.png" },
+    { value: "fr", label: "Français", img: "/icons/fr.png" },
+  ];
+
+  const selected = options.find((o) => o.value === language) ?? options[0];
+
+  return (
+    <div ref={ref} className={`relative ${mobile ? "ml-1" : ""}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-3 ${open ? "rounded-t-[10px] border-b-0" : "rounded-[10px]"} border border-[#4A4A4A40]/75 bg-white px-4 py-2`}
+      >
+        <span className="inline-flex items-center justify-center rounded-full bg-white">
+          <Image
+            src={selected.img}
+            alt={selected.label}
+            width={26}
+            height={26}
+            className="rounded-full"
+          />
+        </span>
+        <span className="text-black font-semibold uppercase">
+          {selected.label}
+        </span>
+        <svg
+          className="w-4 h-4 text-black ml-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className={`absolute w-full rounded-b-[10px] bg-white border border-[#4A4A4A40]/75 overflow-hidden z-50`}>
+          {options
+            .filter((opt) => opt.value !== language)
+            .map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setLanguage(opt.value);
+                  setOpen(false);
+                }}
+                className=" flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition text-gray-800"
+              >
+                <Image
+                  src={opt.img}
+                  alt={opt.label}
+                  width={26}
+                  height={26}
+                  className="rounded-full"
+                />
+                <span className="underline">{opt.label}</span>
+              </button>
+            ))}
+        </div>
+      )}
     </div>
   );
 };

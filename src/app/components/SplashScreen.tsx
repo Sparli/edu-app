@@ -24,7 +24,7 @@ const SplashScreen = ({
         <div className="rounded-full  lg:border-30 border-20  border-[#FFCCB4]/30 ">
           <div className="lg:w-90 lg:h-90 w-50 h-50 rounded-full bg-white shadow-lg flex items-center justify-center">
             <Image
-              src="/images/book.svg"
+              src="/images/logoNew.svg"
               alt="EduImmersion Logo"
               width={300}
               height={300}

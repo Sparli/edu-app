@@ -1,18 +1,57 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useProfile } from "@/app/context/ProfileContext";
 import { IoIosSend } from "react-icons/io";
 import Image from "next/image";
 import { translations } from "@/app/translations";
+import {
+  createCheckoutSession,
+  cancelSubscription,
+} from "@/app/utils/subscriptionApi";
+import { getUserProfile } from "@/app/utils/getUserProfile";
+import CancelSubscriptionModal from "@/app/components/modals/CancelSubscriptionModal";
 
 const PremiumMonthlyView: React.FC = () => {
   const { language } = useLanguage();
   const { profile, setProfile } = useProfile();
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const userName = profile?.first_name || "User";
   const t = translations[language];
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!profile) {
+        setProfileLoading(true);
+        try {
+          const profileData = await getUserProfile();
+          if (profileData) {
+            setProfile(profileData);
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile:", error);
+        } finally {
+          setProfileLoading(false);
+        }
+      }
+    };
+    fetchProfile();
+  }, [profile, setProfile]);
+
+  // Format subscription validity date
+  const formatSubscriptionDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString(language === "fr" ? "fr-FR" : "en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   const features = [
     t.premium_feature_unlimited_quizzes,
@@ -25,38 +64,76 @@ const PremiumMonthlyView: React.FC = () => {
   const handleUpgradeToYearly = useCallback(async () => {
     setLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              subscription_status: "yearly",
-              is_subscribed: true,
-            }
-          : null
-      );
-      setLoading(false);
-    }, 1000);
-  }, [setProfile]);
+    try {
+      // Create Stripe checkout session for yearly plan
+      const response = await createCheckoutSession("yearly");
 
-  const handleDowngradeToFree = useCallback(async () => {
+      if (response.success && response.checkout_url) {
+        // Redirect to Stripe checkout
+        window.location.href = response.checkout_url;
+      } else {
+        throw new Error(response.error || "Failed to create checkout session");
+      }
+    } catch (error) {
+      console.error("Upgrade error:", error);
+      alert("Failed to start upgrade process. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleDowngradeToFree = useCallback(() => {
+    setShowCancelModal(true);
+  }, []);
+
+  const handleConfirmCancel = useCallback(async () => {
     setLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              subscription_status: "free",
-              is_subscribed: false,
-            }
-          : null
-      );
+    try {
+      const response = await cancelSubscription();
+
+      if (response.success) {
+        // Update profile context to reflect cancellation
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                subscription_status: "free",
+                is_subscribed: false,
+                subscription_valid_until: response.effective_end,
+              }
+            : null
+        );
+
+        // Show success message
+        const successMessage =
+          language === "fr"
+            ? "Abonnement annulé avec succès. Vous avez maintenant accès au plan gratuit."
+            : "Subscription canceled successfully. You now have access to the free plan.";
+        alert(successMessage);
+
+        // Close modal
+        setShowCancelModal(false);
+      } else {
+        throw new Error(response.error || "Failed to cancel subscription");
+      }
+    } catch (error) {
+      console.error("Cancel subscription error:", error);
+      const errorMessage =
+        language === "fr"
+          ? "Échec de l'annulation de l'abonnement. Veuillez réessayer."
+          : "Failed to cancel subscription. Please try again.";
+      alert(errorMessage);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [setProfile]);
+    }
+  }, [setProfile, language]);
+
+  const handleCloseModal = useCallback(() => {
+    if (!loading) {
+      setShowCancelModal(false);
+    }
+  }, [loading]);
 
   return (
     <div className="w-full mt-4 mb-4 px-4 sm:mt-8 sm:mb-8 sm:px-0">
@@ -96,7 +173,9 @@ const PremiumMonthlyView: React.FC = () => {
             <span>
               {t.premium_monthly_valid_till.replace(
                 "{{date}}",
-                language === "fr" ? "25 octobre 2025" : "October 25, 2025"
+                profileLoading
+                  ? "..."
+                  : formatSubscriptionDate(profile?.subscription_valid_until)
               )}
             </span>
           </div>
@@ -180,6 +259,15 @@ const PremiumMonthlyView: React.FC = () => {
           <IoIosSend className="w-4 h-4 sm:w-[19px] sm:h-[19px]" />
         </button>
       </div>
+
+      {/* Cancel Subscription Modal */}
+      <CancelSubscriptionModal
+        isOpen={showCancelModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmCancel}
+        loading={loading}
+        language={language}
+      />
     </div>
   );
 };
